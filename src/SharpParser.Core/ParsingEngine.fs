@@ -17,85 +17,96 @@ module ParsingEngine =
         else
             contextAfterToken
 
-    /// Processes input starting at the given position and dispatches to appropriate handlers
+    /// Processes input starting at the given position and dispatches to appropriate handlers.
+    /// This is the core parsing function that implements the parsing priority order:
+    /// 1. Sequence handlers (longest match wins)
+    /// 2. Pattern handlers (regex-based)
+    /// 3. Character handlers (single character)
     /// Returns the updated context and the number of characters consumed
     let processPosition (config: ParserConfig) (context: ParserContext) (line: string) (pos: int) : ParserContext * int =
-        // Get current mode for handler lookup
+        // Determine the current parsing mode to look up appropriate handlers
         let currentMode = ParserContextOps.currentMode context
 
-        // Try sequence match first (longest match from current position)
+        // FIRST: Try to match sequences (keywords, operators) - these have highest priority
+        // Sequence matching uses a trie for efficient longest-match lookup
         let sequenceMatch = HandlerRegistry.matchSequence currentMode line pos config.Registry
 
         match sequenceMatch with
         | Some (length, handler) ->
-            // Sequence matched, invoke handler
+            // A sequence was matched - invoke the associated handler
             let contextAfterHandler = handler context
 
-            // Extract the matched sequence
+            // Extract the actual text that was matched for tokenization/AST building
             let matchedText = line.Substring(pos, length)
 
-            // Update position to after the match
+            // Advance the parsing position by the length of the matched sequence
             let contextAfterPosition = ParserContextOps.updatePosition context.Line (context.Col + length) contextAfterHandler
 
-            // Handle token emission and AST building
+            // If tokenization or AST building is enabled, automatically create tokens/nodes
             let finalContext = handleMatch config matchedText contextAfterPosition
 
             (finalContext, length)
 
         | None ->
-            // No sequence match, try pattern match
+            // SECOND: No sequence match, try pattern matching (regex-based handlers)
+            // Patterns can match identifiers, numbers, strings, etc.
             let patternMatch = HandlerRegistry.matchPattern currentMode line pos config.Registry
 
             match patternMatch with
             | Some (length, matchedText, handler) ->
-                // Pattern matched, invoke handler
+                // A pattern was matched - invoke the handler with the matched text
                 let contextAfterHandler = handler context matchedText
 
-                // Update position to after the match
+                // Advance position by the length of the matched pattern
                 let contextAfterPosition = ParserContextOps.updatePosition context.Line (context.Col + length) contextAfterHandler
-    
-                // Handle token emission and AST building
+
+                // Handle automatic tokenization and AST building
                 let finalContext = handleMatch config matchedText contextAfterPosition
-    
+
                 (finalContext, length)
 
             | None ->
-                // No pattern match, check if we're at end of line
+                // THIRD: No pattern match either, check if we've reached end of line
                 if pos >= line.Length then
-                    (context, 0) // Nothing consumed
+                    (context, 0) // End of line reached, nothing consumed
                 else
-                    // Try character handlers for current character
+                    // Try character-level handlers for the current character
                     let currentChar = line.[pos]
                     let charHandlers = HandlerRegistry.getCharHandlers currentMode currentChar config.Registry
 
                     match charHandlers with
                     | [] ->
-                        // No handlers matched - check if any handlers are registered at all
+                        // No character handlers found for this character
+                        // Check if the parser has any handlers registered at all
                         let hasAnyHandlers =
                             not (Map.isEmpty config.Registry.CharHandlers) ||
                             not (Map.isEmpty config.Registry.SequenceTrie) ||
                             not (Map.isEmpty config.Registry.PatternHandlers)
+
                         if hasAnyHandlers then
-                            // Only report error if handlers are registered but none matched
+                            // Handlers exist but none matched - this is an unexpected character
+                            // Generate an error with a helpful suggestion
                             let suggestion = Some (sprintf "Consider adding a handler for character '%c' or using a pattern handler" currentChar)
                             let errorContext = ErrorHandling.triggerError (ParseError.UnexpectedChar currentChar) config context suggestion
                             let contextAfterPosition = ParserContextOps.updatePosition context.Line (context.Col + 1) errorContext
                             (contextAfterPosition, 1)
                         else
-                            // No handlers registered at all - just consume the character
+                            // No handlers registered at all - silently consume the character
+                            // This allows the parser to work as a simple character-by-character processor
                             let contextAfterPosition = ParserContextOps.updatePosition context.Line (context.Col + 1) context
                             (contextAfterPosition, 1)
                     | handlers ->
-                        // Invoke all character handlers
+                        // Character handlers found - invoke all of them in sequence
+                        // Multiple handlers can be registered for the same character
                         let contextAfterHandlers = handlers |> List.fold (fun ctx handler -> handler ctx) context
-    
-                        // Update position to after the character
+
+                        // Advance position by one character
                         let contextAfterPosition = ParserContextOps.updatePosition context.Line (context.Col + 1) contextAfterHandlers
 
-                        // Convert character to string for auto functions
+                        // Convert the character to string for tokenization/AST purposes
                         let charAsString = string currentChar
 
-                        // Handle token emission and AST building
+                        // Handle automatic token emission and AST node creation
                         let finalContext = handleMatch config charAsString contextAfterPosition
 
                         (finalContext, 1)

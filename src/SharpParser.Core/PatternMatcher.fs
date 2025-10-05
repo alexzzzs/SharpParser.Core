@@ -21,15 +21,17 @@ module PatternMatcher =
             else
                 None
 
-    /// Tries all patterns and returns the first successful match
+    /// Tries all patterns in order and returns the first successful match.
+    /// This implements "first match wins" semantics for pattern handlers.
+    /// Returns the match length, matched text, and the index of the matching pattern.
     let matchAll (patterns: Regex list) (text: string) (position: int) : (int * string * int) option =
         patterns
-        |> List.mapi (fun index pattern ->
-            match tryMatch pattern text position with
-            | Some (length, matchedText) -> Some (length, matchedText, index)
-            | None -> None)
-        |> List.tryFind Option.isSome
-        |> Option.flatten
+        |> List.mapi (fun index pattern ->  // Add index to track which pattern matched
+            match tryMatch pattern text position with  // Try this pattern at the position
+            | Some (length, matchedText) -> Some (length, matchedText, index)  // Success: include pattern index
+            | None -> None)  // This pattern didn't match
+        |> List.tryFind Option.isSome  // Find the first successful match (if any)
+        |> Option.flatten  // Unwrap the nested Option
 
     /// Cache for compiled regex patterns to avoid recompilation
     let private patternCache = ref Map.empty<string, Regex>

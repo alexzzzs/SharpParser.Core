@@ -86,43 +86,46 @@ module Parser =
     let printSummary (context: ParserContext) : unit =
         formatSummary context |> printfn "%s"
 
-    /// Validates that the parser configuration is properly set up
+    /// Validates that the parser configuration is properly set up and detects common configuration errors
     let validateConfig (config: ParserConfig) : Result<ParserConfig, string> =
         let errors = ResizeArray<string>()
 
-        // Check for conflicting character handlers in same mode
+        // VALIDATION 1: Check for conflicting character handlers in the same mode
+        // Multiple handlers for the same character in the same mode would be ambiguous
         let charConflicts =
             config.Registry.CharHandlers
-            |> Map.toSeq
-            |> Seq.collect (fun (mode, charMap) ->
+            |> Map.toSeq  // Iterate over all modes
+            |> Seq.collect (fun (mode, charMap) ->  // For each mode, examine its character handlers
                 charMap
-                |> Map.toSeq
-                |> Seq.groupBy fst
-                |> Seq.filter (fun (_, handlers) -> Seq.length handlers > 1)
+                |> Map.toSeq  // Get all character->handler mappings
+                |> Seq.groupBy fst  // Group by character (fst = first element of tuple)
+                |> Seq.filter (fun (_, handlers) -> Seq.length handlers > 1)  // Find characters with multiple handlers
                 |> Seq.map (fun (char, _) -> sprintf "Multiple handlers for character '%c' in mode %A" char mode))
 
         errors.AddRange(charConflicts)
 
-        // Check for conflicting sequence handlers in same mode
+        // VALIDATION 2: Check for conflicting sequence handlers in the same mode
         // Note: Full trie conflict detection would require traversing the trie to detect overlapping sequences.
         // This is complex to implement efficiently. The trie handles conflicts by design (longest match wins),
         // but validation is skipped for performance reasons. Users should be aware that shorter sequences
         // may be shadowed by longer ones if they share prefixes.
         let sequenceConflicts = Seq.empty<string>
 
-        // Check for conflicting pattern handlers in same mode
+        // VALIDATION 3: Check for conflicting pattern handlers in the same mode
+        // Duplicate regex patterns in the same mode would be redundant or error-prone
         let patternConflicts =
             config.Registry.PatternHandlers
-            |> Map.toSeq
-            |> Seq.collect (fun (mode, patterns) ->
+            |> Map.toSeq  // Iterate over all modes
+            |> Seq.collect (fun (mode, patterns) ->  // For each mode, examine its pattern handlers
                 patterns
-                |> Seq.groupBy (fun (regex, _) -> regex.ToString())
-                |> Seq.filter (fun (_, group) -> Seq.length group > 1)
+                |> Seq.groupBy (fun (regex, _) -> regex.ToString())  // Group by regex pattern string
+                |> Seq.filter (fun (_, group) -> Seq.length group > 1)  // Find duplicate patterns
                 |> Seq.map (fun (pattern, _) -> sprintf "Duplicate pattern '%s' in mode %A" pattern mode))
 
         errors.AddRange(patternConflicts)
 
-        // Check for valid regex patterns
+        // VALIDATION 4: Check for valid regex patterns
+        // Malformed regex patterns would cause runtime exceptions during parsing
         let invalidPatterns =
             config.Registry.PatternHandlers
             |> Map.toSeq
@@ -130,18 +133,21 @@ module Parser =
                 patterns
                 |> Seq.choose (fun (regex, _) ->
                     try
-                        regex.Match("") |> ignore // Test if regex is valid
-                        None
+                        // Test if the regex can be executed (even on empty string)
+                        regex.Match("") |> ignore
+                        None  // Pattern is valid
                     with
-                    | ex -> Some (sprintf "Invalid regex pattern: %s" ex.Message)))
+                    | ex -> Some (sprintf "Invalid regex pattern: %s" ex.Message)))  // Pattern is malformed
 
         errors.AddRange(invalidPatterns)
 
-        // Check for error handlers if tracing is enabled (optional but recommended)
+        // VALIDATION 5: Check for error handlers when tracing is enabled
+        // Tracing generates detailed logs but errors might be missed without error handlers
         if config.EnableTrace && List.isEmpty config.Registry.ErrorHandlers then
-            errors.Add("Tracing is enabled but no error handlers are registered")
+            errors.Add("Tracing is enabled but no error handlers are registered (recommended for debugging)")
 
+        // Return validation result
         if errors.Count > 0 then
-            Error (String.concat "; " errors)
+            Error (String.concat "; " errors)  // Configuration has issues
         else
-            Ok config
+            Ok config  // Configuration is valid
