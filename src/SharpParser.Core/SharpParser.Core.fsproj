@@ -13,11 +13,11 @@
     <PackageTags>fsharp;parsing;parser;language;ast;tokenizer</PackageTags>
     <RepositoryUrl>https://github.com/alexzzzs/SharpParser.Core</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReadmeFile>NuGet-README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="../../README.md" Pack="true" PackagePath="\" />
+    <None Include="../../NuGet-README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>
