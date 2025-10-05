@@ -11,7 +11,7 @@
     <Authors>Alex</Authors>
     <Description>A beginner-friendly, event-driven F# parsing library for language design and implementation.</Description>
     <PackageTags>fsharp;parsing;parser;language;ast;tokenizer</PackageTags>
-    <RepositoryUrl>https://github.com/alex/SharpParser.Core</RepositoryUrl>
+    <RepositoryUrl>https://github.com/alexzzzs/SharpParser.Core</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>

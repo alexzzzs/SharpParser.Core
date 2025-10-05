@@ -1,6 +1,15 @@
 # SharpParser.Core
 
+[![NuGet](https://img.shields.io/nuget/v/SharpParser.Core.svg)](https://www.nuget.org/packages/SharpParser.Core/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![.NET](https://img.shields.io/badge/.NET-6.0+-blue.svg)](https://dotnet.microsoft.com/)
+[![F#](https://img.shields.io/badge/F%23-00539C?logo=fsharp&logoColor=white)](https://fsharp.org/)
+
 A beginner-friendly, event-driven F# parsing library for language design and implementation.
+
+## Why SharpParser.Core?
+
+Writing parsers in F# often requires complex combinator libraries or heavy compiler frameworks. SharpParser.Core takes a different approach: a lightweight, event-driven API that makes building language parsers **intuitive, composable, and fun** — without sacrificing power. Whether you're building a domain-specific language, configuration parser, or language tool, SharpParser gives you the control and performance you need with an API that feels natural in F#.
 
 ## Features
 
@@ -16,12 +25,39 @@ A beginner-friendly, event-driven F# parsing library for language design and imp
 
 ## Quick Start
 
+### Hello World Parser
+
+Here's your first parser in just 10 lines:
+
+```fsharp
+open SharpParser.Core
+
+let parser =
+    Parser.create()
+    |> Parser.onSequence "hello" (fun ctx ->
+        printfn "Hello found at line %d, col %d" ctx.Line ctx.Col
+        ctx)
+
+Parser.runString "hello world" parser
+```
+
+**Output:**
+```
+Hello found at line 1, col 1
+```
+
+✅ **That's all you need to start building a parser!** The next example shows how to handle nested contexts, ASTs, and more advanced features.
+
+### Full Example with Modes & AST
+
 ```fsharp
 open SharpParser.Core
 
 // Create a parser with mode-based handlers
 let parser =
     Parser.create ()
+    |> Parser.enableTokens()  // Enable automatic tokenization
+    |> Parser.enableAST()     // Enable AST building
     |> Parser.onSequence "function" (fun ctx ->
         printfn "Found function at line %d, col %d" ctx.Line ctx.Col
         ParserContext.enterMode "functionBody" ctx)
@@ -32,22 +68,25 @@ let parser =
             ctx)
         |> Parser.onChar '}' (fun ctx ->
             printfn "End function block"
-            ParserContext.exitMode ctx)
-        |> Parser.onSequence "if" (fun ctx ->
-            printfn "Found if statement"
-            ParserContext.enterMode "ifBody" ctx)
-        |> Parser.inMode "ifBody" (fun ifConfig ->
-            ifConfig
-            |> Parser.onChar '{' (fun ctx -> printfn "Start if block"; ctx)
-            |> Parser.onChar '}' (fun ctx -> printfn "End if block"; ParserContext.exitMode ctx)))
+            ParserContext.exitMode ctx))
 
 // Parse input
-let context = Parser.runString "function test() { if true { return 42 } }" parser
+let context = Parser.runString "function test() { return 42 }" parser
 
 // Get results
 let tokens = Parser.getTokens context
 let ast = Parser.getAST context
-let errors = Parser.getErrors context
+```
+
+**Sample Output:**
+```
+Found function at line 1, col 1
+Start function block
+End function block
+
+Tokens: [Keyword("function"), Identifier("test"), Symbol("("), Symbol(")"), Symbol("{"), Keyword("return"), Number(42.0), Symbol("}")]
+
+AST: [Function("test", [], [Return(Some(Number(42.0)))])]
 ```
 
 ## Installation
@@ -76,7 +115,7 @@ Or add it manually to your `.fsproj`:
 Clone the repository and reference the project directly:
 
 ```bash
-git clone https://github.com/yourusername/SharpParser.Core.git
+git clone https://github.com/alexzzzs/SharpParser.Core.git
 ```
 
 Then add to your `.fsproj`:
@@ -236,16 +275,35 @@ The architecture supports several extension points:
 
 ## Contributing
 
-Contributions are welcome! Recent improvements include:
+We welcome contributions! SharpParser.Core is an open-source project that benefits from community involvement.
+
+### Ways to Contribute
+
+- **🐛 Bug Reports**: Found an issue? [Open a GitHub issue](https://github.com/alexzzzs/SharpParser.Core/issues)
+- **💡 Feature Requests**: Have an idea? [Start a discussion](https://github.com/alexzzzs/SharpParser.Core/discussions)
+- **📖 Documentation**: Help improve docs, examples, or tutorials
+- **🧪 Testing**: Add test cases or improve test coverage
+- **🔧 Code**: Submit pull requests for bug fixes or new features
+
+### Development Setup
+
+```bash
+git clone https://github.com/alexzzzs/SharpParser.Core.git
+cd SharpParser.Core
+dotnet build
+dotnet test
+```
+
+### Recent Improvements
 
 ✅ **Functional programming** - Eliminated mutable state throughout the codebase
 ✅ **Enhanced AST types** - Added support for complex expressions and literals
 ✅ **Configuration validation** - Built-in validation for parser configurations
-✅ **Comprehensive testing** - 109 tests covering all functionality and edge cases
+✅ **Comprehensive testing** - 138 tests covering all functionality and edge cases
 ✅ **Error handling** - Proper invocation of error handlers
 ✅ **Documentation** - Updated API docs and README
 
-Areas for future improvement:
+### Future Roadmap
 
 1. **Performance optimizations** - Benchmark and optimize hot paths
 2. **Additional examples** - More real-world parsing scenarios
