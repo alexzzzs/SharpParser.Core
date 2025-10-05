@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <WarnOn>3390;$(WarnOn)</WarnOn>
+
+    <!-- NuGet Package Metadata -->
+    <PackageId>SharpParser.Core</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Alex</Authors>
+    <Description>A beginner-friendly, event-driven F# parsing library for language design and implementation.</Description>
+    <PackageTags>fsharp;parsing;parser;language;ast;tokenizer</PackageTags>
+    <RepositoryUrl>https://github.com/alex/SharpParser.Core</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Types.fs" />
+    <Compile Include="Trie.fs" />
+    <Compile Include="PatternMatcher.fs" />
+    <Compile Include="HandlerRegistry.fs" />
+    <Compile Include="ParserContext.fs" />
+    <Compile Include="Tokenizer.fs" />
+    <Compile Include="ParserConfig.fs" />
+    <Compile Include="ASTBuilder.fs" />
+    <Compile Include="ErrorHandler.fs" />
+    <Compile Include="ParsingEngine.fs" />
+    <Compile Include="Tracer.fs" />
+    <Compile Include="Parser.fs" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,13 @@
+function calculate(x, y) {
+    result = x + y * 2
+    if result > 10 {
+        return result
+    } else {
+        return 0
+    }
+}
+
+function main() {
+    value = calculate(5, 3)
+    return value
+}
