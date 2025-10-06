@@ -19,9 +19,10 @@ Writing parsers in F# often requires complex combinator libraries or heavy compi
 - **Enhanced AST types** - Support for binary operations, unary operations, variables, numbers, and strings
 - **Configuration validation** - Built-in validation to catch configuration errors early
 - **Error handling and debugging** - Comprehensive error reporting and trace logging
+- **Parallel parsing** - Multi-threaded parsing for improved performance on multi-core systems
 - **Functional programming** - Pure functions, immutable data structures, and no mutable state
 - **Fluent, chainable API** - Easy-to-use functional programming style
-- **Comprehensive testing** - 109 tests covering all functionality and edge cases
+- **Comprehensive testing** - 138 tests covering all functionality and edge cases
 
 ## Quick Start
 
@@ -257,6 +258,7 @@ SharpParser.Core consists of several focused modules:
 
 - **Trie-based sequence matching** for efficient multi-character detection
 - **Compiled regex patterns** for fast pattern matching
+- **Parallel parsing** for improved performance on multi-core systems
 - **Immutable data structures** for thread safety and functional style
 - **Functional programming patterns** with no mutable state for better performance
 - **Minimal allocations** through pure functions and immutability
@@ -267,7 +269,6 @@ SharpParser.Core consists of several focused modules:
 The architecture supports several extension points:
 
 - **Grammar DSL** - Domain-specific language for grammar definition
-- **Parallel parsing** - Multi-threaded parsing for large files
 - **Incremental parsing** - Parse changes without full reparse
 - **Custom token types** - Extensible token type system
 - **Plugin system** - Load handlers from external assemblies
@@ -299,15 +300,17 @@ dotnet test
 ✅ **Functional programming** - Eliminated mutable state throughout the codebase
 ✅ **Enhanced AST types** - Added support for complex expressions and literals
 ✅ **Configuration validation** - Built-in validation for parser configurations
+✅ **Parallel parsing** - Multi-threaded parsing for improved performance on multi-core systems
+✅ **Performance optimizations** - Regex anchoring, trie Dictionary optimization, token caching
 ✅ **Comprehensive testing** - 138 tests covering all functionality and edge cases
 ✅ **Error handling** - Proper invocation of error handlers
 ✅ **Documentation** - Updated API docs and README
 
 ### Future Roadmap
 
-1. **Performance optimizations** - Benchmark and optimize hot paths
+1. **Performance optimizations** - Continue benchmarking and optimizing hot paths
 2. **Additional examples** - More real-world parsing scenarios
-3. **Extensions** - Implement planned extension points (grammar DSL, parallel parsing)
+3. **Extensions** - Implement planned extension points (grammar DSL, incremental parsing)
 4. **Visual debugging** - GUI for parsing visualization
 
 ## License

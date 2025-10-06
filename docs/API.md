@@ -132,6 +132,31 @@ type ParserContext = {
 }
 ```
 
+### ParallelConfig
+Configuration for parallel parsing features:
+
+```fsharp
+type ParallelConfig = {
+    EnableParallelParsing: bool          // Master switch for parallel parsing
+    MaxParallelism: int                  // Maximum parallel tasks (defaults to processor count)
+    MinFunctionsForParallelism: int      // Minimum functions needed to enable parallelism
+    EnableParallelTokenization: bool     // Enable parallel tokenization
+}
+```
+
+### FunctionBoundary
+Represents detected function/class boundaries for parallel processing:
+
+```fsharp
+type FunctionBoundary = {
+    Name: string                         // Function/class name
+    StartLine: int                        // Starting line number (1-based)
+    EndLine: int                          // Ending line number (1-based)
+    Content: string                      // Full content of the function/class
+    DeclarationType: string              // "function" or "class"
+}
+```
+
 ### Handler Types
 Type aliases for different handler function signatures:
 
@@ -255,6 +280,44 @@ let config =
         match matched with
         | "function" -> Some (ASTNode.Function ("custom", [], []))
         | _ -> None)
+```
+
+#### `Parser.enableParallel () (config: ParserConfig) : ParserConfig`
+Enables parallel parsing features for improved performance on multi-core systems.
+
+```fsharp
+let config =
+    Parser.create ()
+    |> Parser.enableParallel ()  // Enable parallel parsing
+```
+
+#### `Parser.withMaxParallelism (maxParallelism: int) (config: ParserConfig) : ParserConfig`
+Sets the maximum number of parallel tasks (defaults to processor count).
+
+```fsharp
+let config =
+    Parser.create ()
+    |> Parser.enableParallel ()
+    |> Parser.withMaxParallelism 4  // Limit to 4 parallel tasks
+```
+
+#### `Parser.withMinFunctionsForParallelism (minFunctions: int) (config: ParserConfig) : ParserConfig`
+Sets the minimum number of functions required to enable parallel parsing.
+
+```fsharp
+let config =
+    Parser.create ()
+    |> Parser.enableParallel ()
+    |> Parser.withMinFunctionsForParallelism 3  // Need at least 3 functions
+```
+
+#### `Parser.enableParallelTokenization () (config: ParserConfig) : ParserConfig`
+Enables parallel tokenization for independent line processing.
+
+```fsharp
+let config =
+    Parser.create ()
+    |> Parser.enableParallelTokenization ()  // Enable parallel tokenization
 ```
 
 #### `Parser.validateConfig (config: ParserConfig) : Result<ParserConfig, string>`
@@ -601,6 +664,28 @@ let ast = Parser.getAST context
 
 This shows how the parser processes "return 42" and builds a `Return` node containing a `Number` literal.
 
+### Parallel Parsing Example
+
+Enable parallel parsing for improved performance on multi-core systems:
+
+```fsharp
+let parser =
+    Parser.create ()
+    |> Parser.enableTokens ()
+    |> Parser.enableAST ()
+    |> Parser.enableParallel ()                    // Enable parallel parsing
+    |> Parser.withMaxParallelism 4                 // Limit to 4 parallel tasks
+    |> Parser.enableParallelTokenization ()        // Enable parallel tokenization
+    |> Parser.onSequence "function" (fun ctx -> ParserContextOps.enterMode "functionBody" ctx)
+    |> Parser.inMode "functionBody" (fun config ->
+        config
+        |> Parser.onChar '{' (fun ctx -> printfn "Function start"; ctx)
+        |> Parser.onChar '}' (fun ctx -> printfn "Function end"; ParserContextOps.exitMode ctx))
+
+let context = Parser.runString largeCodeString parser
+// Parsing automatically uses parallel processing when beneficial
+```
+
 ### Complete Parser with All Features
 
 ```fsharp
@@ -628,12 +713,13 @@ let errors = Parser.getErrors context
 
 ### Performance Characteristics
 
-SharpParser.Core is designed for educational and light to medium parsing tasks:
+SharpParser.Core is designed for educational and light to medium parsing tasks with optional parallel processing:
 
-- **Sequence matching**: O(m) using trie-based lookup for efficient keyword/operator recognition
-- **Pattern matching**: Regex-based with compiled caching for identifiers, numbers, etc.
+- **Sequence matching**: O(1) using Dictionary-based trie lookup for efficient keyword/operator recognition
+- **Pattern matching**: Regex-based with compiled caching and anchoring for identifiers, numbers, etc.
+- **Parallel processing**: Multi-threaded parsing with configurable parallelism for improved performance on multi-core systems
 - **Memory usage**: Functional immutable data structures ensure thread-safety but may have higher memory overhead for very large files
-- **Scalability**: Best suited for files up to ~100KB; not optimized for full compiler-grade performance
+- **Scalability**: Best suited for files up to ~100KB with parallel processing; not optimized for full compiler-grade performance
 
 ### Limitations
 

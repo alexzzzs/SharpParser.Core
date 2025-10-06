@@ -207,24 +207,30 @@ Each mode maintains separate handler sets, allowing different behavior in differ
 ### Optimizations Implemented
 
 1. **Trie-based Sequence Matching**
-   - O(m) lookup time where m is sequence length
-   - Avoids repeated string operations
-   - Memory efficient for large keyword sets
+    - O(1) lookup time using Dictionary instead of Map
+    - Avoids repeated string operations
+    - Memory efficient for large keyword sets
 
 2. **Regex Compilation and Caching**
-   - Compiled regexes for pattern handlers
-   - ConcurrentDictionary cache to avoid recompilation
-   - Anchored patterns for position-based matching
+    - Compiled regexes for pattern handlers
+    - ConcurrentDictionary cache to avoid recompilation
+    - Anchored patterns for position-based matching
+    - Pre-compiled patterns for common token types
 
-3. **Immutable Data Structures**
-   - Thread-safe parsing contexts
-   - No locking required for concurrent access
-   - Predictable memory usage patterns
+3. **Parallel Processing**
+    - Parallel tokenization for independent line processing
+    - Function boundary detection for potential parallel function parsing
+    - Configurable parallelism levels with automatic fallback
 
-4. **Functional Design**
-   - No mutable state in core algorithms
-   - Easy to test and reason about
-   - Composability through function chaining
+4. **Immutable Data Structures**
+    - Thread-safe parsing contexts
+    - No locking required for concurrent access
+    - Predictable memory usage patterns
+
+5. **Functional Design**
+    - No mutable state in core algorithms
+    - Easy to test and reason about
+    - Composability through function chaining
 
 ### Algorithm Complexities
 
@@ -241,7 +247,7 @@ The architecture supports several extension mechanisms:
 2. **Custom AST Nodes**: Extend `ASTNode` union for language-specific constructs
 3. **Handler Plugins**: Load handlers from external assemblies
 4. **Grammar DSL**: Define grammars in a domain-specific language
-5. **Parallel Processing**: Process multiple files concurrently
+5. **Parallel Processing**: Process multiple files concurrently (implemented)
 6. **Incremental Parsing**: Parse changes without full reparse
 
 ## Testing Strategy
@@ -258,6 +264,5 @@ The modular architecture enables focused testing:
 1. **Plugin System**: Dynamic handler loading
 2. **Grammar DSL**: Declarative grammar definition
 3. **Incremental Parsing**: Efficient change-based parsing
-4. **Parallel Parsing**: Multi-threaded parsing for large files
-5. **Visual Debugging**: GUI for parsing visualization
-6. **Language Server**: IDE integration for syntax highlighting and error reporting
+4. **Visual Debugging**: GUI for parsing visualization
+5. **Language Server**: IDE integration for syntax highlighting and error reporting
