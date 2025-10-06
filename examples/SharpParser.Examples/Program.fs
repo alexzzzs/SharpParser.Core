@@ -16,6 +16,10 @@ module Program =
             BasicExample.run ()
             ModeExample.run ()
             FullExample.run ()
+            JsonExample.run ()
+            CsvExample.run ()
+            ExpressionExample.run ()
+            IniExample.run ()
 
             printfn "=== All Examples Completed ==="
             printfn "Thank you for trying SharpParser.Core!"

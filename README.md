@@ -108,7 +108,7 @@ dotnet add package SharpParser.Core
 Or add it manually to your `.fsproj`:
 
 ```xml
-<PackageReference Include="SharpParser.Core" Version="1.0.0" />
+<PackageReference Include="SharpParser.Core" Version="1.1.0" />
 ```
 
 ### From Source
@@ -232,6 +232,10 @@ See the [`examples/`](examples/) directory for comprehensive examples:
 - **BasicExample** - Simple character and pattern handlers
 - **ModeExample** - Context-sensitive parsing with modes
 - **FullExample** - All features (tokens, AST, error handling, tracing)
+- **JsonExample** - Parsing JSON-like structured data with modes
+- **CsvExample** - Parsing CSV data with quoted fields and escaping
+- **ExpressionExample** - Parsing arithmetic expressions with operator precedence
+- **IniExample** - Parsing INI configuration files with sections
 
 Run the examples:
 

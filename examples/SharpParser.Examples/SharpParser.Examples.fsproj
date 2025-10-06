@@ -9,6 +9,10 @@
     <Compile Include="BasicExample.fs" />
     <Compile Include="ModeExample.fs" />
     <Compile Include="FullExample.fs" />
+    <Compile Include="JsonExample.fs" />
+    <Compile Include="CsvExample.fs" />
+    <Compile Include="ExpressionExample.fs" />
+    <Compile Include="IniExample.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
