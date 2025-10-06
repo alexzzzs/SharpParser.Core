@@ -243,6 +243,16 @@ Run the examples:
 dotnet run --project examples/SharpParser.Examples/SharpParser.Examples.fsproj
 ```
 
+## Tutorials
+
+Check out the [`tutorials/`](tutorials/) directory for step-by-step guides:
+
+- **[Parsing JSON with SharpParser](tutorials/Parsing-JSON-with-SharpParser.md)** - Build a complete JSON parser from scratch
+- **[Building a CSV Parser](tutorials/Building-a-CSV-Parser.md)** - Handle quoted fields, escaping, and complex CSV structures
+- **[Creating Configuration File Parsers](tutorials/Creating-Configuration-File-Parsers.md)** - Parse INI files and other config formats
+
+Each tutorial includes complete working code and builds your understanding progressively.
+
 ## Architecture
 
 SharpParser.Core consists of several focused modules:
