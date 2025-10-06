@@ -42,6 +42,22 @@ module Parser =
     let onAST (builder: ASTBuilderFunc) (config: ParserConfig) : ParserConfig =
         ParserConfig.withASTBuilder builder config
 
+    /// Enables parallel parsing
+    let enableParallel () (config: ParserConfig) : ParserConfig =
+        ParserConfig.withParallelParsing true config
+
+    /// Sets the maximum parallelism level
+    let withMaxParallelism (maxParallelism: int) (config: ParserConfig) : ParserConfig =
+        ParserConfig.withMaxParallelism maxParallelism config
+
+    /// Sets the minimum functions threshold for enabling parallelism
+    let withMinFunctionsForParallelism (minFunctions: int) (config: ParserConfig) : ParserConfig =
+        ParserConfig.withMinFunctionsForParallelism minFunctions config
+
+    /// Enables parallel tokenization
+    let enableParallelTokenization () (config: ParserConfig) : ParserConfig =
+        ParserConfig.withParallelTokenization true config
+
     /// Parses a file and returns the final context
     let run (filePath: string) (config: ParserConfig) : ParserContext =
         ParsingEngine.parseFile config filePath

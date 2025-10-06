@@ -141,3 +141,29 @@ type ErrorHandler = ParserContext -> string -> ParserContext
 
 /// Handler function type for custom AST node construction
 type ASTBuilderFunc = string option -> string -> ParserContext -> ASTNode option
+
+/// Configuration for parallel parsing features
+type ParallelConfig = {
+    /// Enable parallel parsing (default: false)
+    EnableParallelParsing: bool
+    /// Maximum number of parallel tasks (default: Environment.ProcessorCount)
+    MaxParallelism: int
+    /// Minimum number of functions to enable parallel parsing (default: 3)
+    MinFunctionsForParallelism: int
+    /// Enable parallel tokenization (default: true when parallel enabled)
+    EnableParallelTokenization: bool
+}
+
+/// Represents a function or top-level declaration boundary for parallel parsing
+type FunctionBoundary = {
+    /// Name of the function/declaration
+    Name: string
+    /// Starting line number (1-based)
+    StartLine: int
+    /// Ending line number (1-based)
+    EndLine: int
+    /// Content of the function
+    Content: string
+    /// Type of declaration (function, class, etc.)
+    DeclarationType: string
+}

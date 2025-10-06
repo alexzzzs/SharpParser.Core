@@ -104,6 +104,28 @@ type ParserBenchmarks() =
         let input = "function calculate(x, y) {\n    if x > 0 {\n        return x + y\n    }\n    return 0\n}\nfunction test(a, b) {\n    return a + b\n}\n" |> String.replicate 10
         Parser.runString input parser |> ignore
 
+    // Parallel parsing benchmark
+    [<Benchmark>]
+    member _.ParallelParsingEnabled() =
+        let parser =
+            Parser.create()
+            |> Parser.enableParallel()
+            |> Parser.enableTokens()
+            |> Parser.enableAST()
+            |> Parser.onSequence "function" (fun ctx -> ParserContextOps.enterMode "body" ctx)
+            |> Parser.onSequence "if" (fun ctx -> ctx)
+            |> Parser.onSequence "return" (fun ctx -> ctx)
+            |> Parser.onChar '+' (fun ctx -> ctx)
+            |> Parser.onChar '=' (fun ctx -> ctx)
+            |> Parser.onPattern @"\d+" (fun ctx _ -> ctx)
+            |> Parser.onPattern @"[a-zA-Z_][a-zA-Z0-9_]*" (fun ctx _ -> ctx)
+            |> Parser.inMode "body" (fun config ->
+                config
+                |> Parser.onChar '{' (fun ctx -> ctx)
+                |> Parser.onChar '}' (fun ctx -> ParserContextOps.exitMode ctx))
+        let input = "function calculate(x, y) {\n    if x > 0 {\n        return x + y\n    }\n    return 0\n}\nfunction test(a, b) {\n    return a + b\n}\nfunction helper(c, d) {\n    return c * d\n}\nfunction main() {\n    return calculate(5, 3) + test(1, 2)\n}\n" |> String.replicate 5
+        Parser.runString input parser |> ignore
+
 module Program =
     [<EntryPoint>]
     let main argv =

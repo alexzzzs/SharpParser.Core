@@ -16,12 +16,22 @@ type ParserConfig = {
     Keywords: Set<string>
     /// Custom AST builders for flexible node construction
     CustomASTBuilders: Map<string option, ASTBuilderFunc list>
+    /// Configuration for parallel parsing features
+    ParallelConfig: ParallelConfig
 }
 
 /// Module for parser configuration operations
 module ParserConfig =
     /// Common keywords for simple programming languages
     let private commonKeywords = set [ "function"; "if"; "else"; "while"; "for"; "return"; "var"; "let"; "const" ]
+
+    /// Default parallel configuration (disabled by default)
+    let private defaultParallelConfig : ParallelConfig = {
+        EnableParallelParsing = false
+        MaxParallelism = System.Environment.ProcessorCount
+        MinFunctionsForParallelism = 3
+        EnableParallelTokenization = false
+    }
 
     /// Creates a default parser configuration
     let create () : ParserConfig =
@@ -33,6 +43,7 @@ module ParserConfig =
             CurrentModeContext = None
             Keywords = Set.empty
             CustomASTBuilders = Map.empty
+            ParallelConfig = defaultParallelConfig
         }
 
     /// Adds a character handler for the current mode context
@@ -116,3 +127,35 @@ module ParserConfig =
         let specificBuilders = tryMode mode
         let globalBuilders = tryMode None
         specificBuilders @ globalBuilders
+
+    /// Enables or disables parallel parsing
+    let withParallelParsing (enabled: bool) (config: ParserConfig) : ParserConfig =
+        let parallelConfig = { config.ParallelConfig with EnableParallelParsing = enabled }
+        { config with ParallelConfig = parallelConfig }
+
+    /// Sets the maximum parallelism level
+    let withMaxParallelism (maxParallelism: int) (config: ParserConfig) : ParserConfig =
+        let parallelConfig = { config.ParallelConfig with MaxParallelism = maxParallelism }
+        { config with ParallelConfig = parallelConfig }
+
+    /// Sets the minimum functions threshold for enabling parallelism
+    let withMinFunctionsForParallelism (minFunctions: int) (config: ParserConfig) : ParserConfig =
+        let parallelConfig = { config.ParallelConfig with MinFunctionsForParallelism = minFunctions }
+        { config with ParallelConfig = parallelConfig }
+
+    /// Enables or disables parallel tokenization
+    let withParallelTokenization (enabled: bool) (config: ParserConfig) : ParserConfig =
+        let parallelConfig = { config.ParallelConfig with EnableParallelTokenization = enabled }
+        { config with ParallelConfig = parallelConfig }
+
+    /// Gets the parallel configuration
+    let getParallelConfig (config: ParserConfig) : ParallelConfig =
+        config.ParallelConfig
+
+    /// Checks if parallel parsing is enabled
+    let isParallelParsingEnabled (config: ParserConfig) : bool =
+        config.ParallelConfig.EnableParallelParsing
+
+    /// Checks if parallel tokenization is enabled
+    let isParallelTokenizationEnabled (config: ParserConfig) : bool =
+        config.ParallelConfig.EnableParallelTokenization
