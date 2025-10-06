@@ -18,7 +18,8 @@ module TrieTests =
     [<Fact>]
     let ``Trie.insert adds single character sequence`` () =
         let trie = Trie.empty<string> () |> Trie.insert "a" "valueA"
-        let childNode = Map.find 'a' trie.Children
+        let success, childNode = trie.Children.TryGetValue('a')
+        success |> should be True
         childNode.IsTerminal |> should be True
         childNode.Value |> should equal (Some "valueA")
 

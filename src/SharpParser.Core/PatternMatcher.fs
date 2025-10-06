@@ -10,13 +10,13 @@ module PatternMatcher =
         new Regex(pattern, RegexOptions.Compiled)
 
     /// Attempts to match a pattern in text starting at the given position
+    /// Uses anchored matching to avoid substring allocations
     let tryMatch (regex: Regex) (text: string) (position: int) : (int * string) option =
         if position < 0 || position >= text.Length then
             None
         else
-            let substring = text.Substring(position)
-            let matchResult = regex.Match(substring)
-            if matchResult.Success && matchResult.Index = 0 then
+            let matchResult = regex.Match(text, position)
+            if matchResult.Success && matchResult.Index = position then
                 Some (matchResult.Length, matchResult.Value)
             else
                 None

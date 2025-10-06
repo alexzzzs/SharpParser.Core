@@ -1,9 +1,11 @@
 namespace SharpParser.Core
 
-/// A node in the trie data structure
+open System.Collections.Generic
+
+/// A node in the trie data structure with fast dictionary lookups
 type TrieNode<'T> = {
-    /// Child nodes indexed by character
-    Children: Map<char, TrieNode<'T>>
+    /// Child nodes indexed by character (using Dictionary for O(1) lookups)
+    Children: Dictionary<char, TrieNode<'T>>
     /// Whether this node represents the end of a sequence
     IsTerminal: bool
     /// The value associated with this terminal node (if any)
@@ -15,7 +17,7 @@ module Trie =
     /// Creates an empty trie node
     let empty<'T> () : TrieNode<'T> =
         {
-            Children = Map.empty
+            Children = Dictionary<char, TrieNode<'T>>()
             IsTerminal = false
             Value = None
         }
@@ -31,11 +33,13 @@ module Trie =
             let firstChar = s.[0]
             let rest = s.Substring(1)
             let childNode =
-                match Map.tryFind firstChar node.Children with
-                | Some existingChild -> insert rest value existingChild
-                | None -> insert rest value (empty ())
-            { node with
-                Children = Map.add firstChar childNode node.Children }
+                match node.Children.TryGetValue(firstChar) with
+                | true, existingChild -> insert rest value existingChild
+                | false, _ -> insert rest value (empty ())
+            // Create new dictionary with updated child
+            let newChildren = Dictionary<char, TrieNode<'T>>(node.Children)
+            newChildren.[firstChar] <- childNode
+            { node with Children = newChildren }
         | _ -> node
 
     /// Searches for an exact sequence match in the trie
@@ -46,9 +50,9 @@ module Trie =
         | s when s.Length > 0 ->
             let firstChar = s.[0]
             let rest = s.Substring(1)
-            match Map.tryFind firstChar node.Children with
-            | Some childNode -> search rest childNode
-            | None -> None
+            match node.Children.TryGetValue(firstChar) with
+            | true, childNode -> search rest childNode
+            | false, _ -> None
         | _ -> None
 
     /// Finds the longest matching sequence starting at the given position in text.
@@ -64,8 +68,8 @@ module Trie =
                 // Get the character at the current position in the text
                 let currentChar = text.[currentPos]
                 // Try to find a child node for this character in the trie
-                match Map.tryFind currentChar currentNode.Children with
-                | Some childNode ->
+                match currentNode.Children.TryGetValue(currentChar) with
+                | true, childNode ->
                     // Character exists in trie - continue traversing
                     // Update lastMatch if this node represents a complete sequence (terminal)
                     let newLastMatch =
@@ -78,7 +82,7 @@ module Trie =
                             lastMatch
                     // Continue with next character and child node
                     traverse (currentPos + 1) childNode newLastMatch
-                | None ->
+                | false, _ ->
                     // Character not found in trie - stop and return last successful match
                     // This ensures we return the longest valid prefix that was a terminal match
                     lastMatch

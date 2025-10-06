@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>SharpParser.Core.Benchmarks.ParserBenchmarks-20251006-123447</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet=v0.13.5, OS=Windows 11 (10.0.26100.6584)
+Unknown processor
+.NET SDK=9.0.304
+  [Host]     : .NET 6.0.36 (6.0.3624.51421), X64 RyuJIT AVX2 DEBUG
+  DefaultJob : .NET 6.0.36 (6.0.3624.51421), X64 RyuJIT AVX2
+</code></pre>
+<pre><code></code></pre>
+
+<table>
+<thead><tr><th>          Method</th><th>Mean</th><th>Error</th><th>StdDev</th><th>Rank</th><th>Gen0</th><th>Gen1</th><th>Allocated</th>
+</tr>
+</thead><tbody><tr><td>SimpleCharacterParsing</td><td>101.7 &mu;s</td><td>0.45 &mu;s</td><td>0.35 &mu;s</td><td>1</td><td>20.5078</td><td>0.1221</td><td>252.74 KB</td>
+</tr><tr><td>SequenceParsing</td><td>185.4 &mu;s</td><td>1.72 &mu;s</td><td>1.60 &mu;s</td><td>3</td><td>39.3066</td><td>8.0566</td><td>483.27 KB</td>
+</tr><tr><td>PatternParsing</td><td>388.9 &mu;s</td><td>4.34 &mu;s</td><td>4.06 &mu;s</td><td>5</td><td>98.1445</td><td>18.0664</td><td>1203.03 KB</td>
+</tr><tr><td>ModeBasedParsing</td><td>155.1 &mu;s</td><td>1.61 &mu;s</td><td>1.43 &mu;s</td><td>2</td><td>31.0059</td><td>4.6387</td><td>381.04 KB</td>
+</tr><tr><td>TokenizationEnabled</td><td>596.8 &mu;s</td><td>6.59 &mu;s</td><td>6.16 &mu;s</td><td>7</td><td>126.9531</td><td>30.2734</td><td>1562.02 KB</td>
+</tr><tr><td>ASTBuildingEnabled</td><td>279.0 &mu;s</td><td>4.27 &mu;s</td><td>3.78 &mu;s</td><td>4</td><td>55.1758</td><td>9.7656</td><td>678.38 KB</td>
+</tr><tr><td>LargeInputParsing</td><td>1,011.5 &mu;s</td><td>8.31 &mu;s</td><td>7.78 &mu;s</td><td>8</td><td>205.0781</td><td>13.6719</td><td>2520.32 KB</td>
+</tr><tr><td>FullFeatureParsing</td><td>558.9 &mu;s</td><td>9.32 &mu;s</td><td>8.72 &mu;s</td><td>6</td><td>96.6797</td><td>23.4375</td><td>1195.9 KB</td>
+</tr></tbody></table>
+</body>
+</html>
