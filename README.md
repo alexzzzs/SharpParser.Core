@@ -182,6 +182,8 @@ Parser.create ()
 
 ## API Reference
 
+For complete API documentation, see [docs/API.md](docs/API.md).
+
 ### Core Functions
 
 - `Parser.create()` - Create new parser configuration
@@ -225,7 +227,7 @@ Parser.create ()
 
 ## Examples
 
-See the `examples/` directory for comprehensive examples:
+See the [`examples/`](examples/) directory for comprehensive examples:
 
 - **BasicExample** - Simple character and pattern handlers
 - **ModeExample** - Context-sensitive parsing with modes
