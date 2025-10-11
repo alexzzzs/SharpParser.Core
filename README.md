@@ -353,4 +353,3 @@ MIT License - see LICENSE file for details.
 
 ---
 
-SharpParser.Core makes parsing fun and accessible while providing the power needed for complex language implementations!
