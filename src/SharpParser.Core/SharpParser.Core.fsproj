@@ -7,7 +7,7 @@
 
     <!-- NuGet Package Metadata -->
     <PackageId>SharpParser.Core</PackageId>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
     <Authors>Alex</Authors>
     <Description>A beginner-friendly, event-driven F# parsing library for language design and implementation.</Description>
     <PackageTags>fsharp;parsing;parser;language;ast;tokenizer</PackageTags>

@@ -157,6 +157,16 @@ type FunctionBoundary = {
 }
 ```
 
+### ExpressionStack
+Internal type for managing operator precedence during expression parsing:
+
+```fsharp
+type ExpressionStack = {
+    Operands: ASTNode list               // Stack of operands (AST nodes)
+    Operators: (string * int) list       // Stack of operators with precedence levels
+}
+```
+
 ### Handler Types
 Type aliases for different handler function signatures:
 
@@ -589,8 +599,40 @@ Automatically emits a token for matched text if tokenization is enabled.
 
 ### ASTBuilder Module
 
-#### `ASTBuilder.buildNode (mode: string) (matchedText: string) (context: ParserContext) : ASTNode option`
-Builds an AST node based on mode and matched text.
+**Note:** Advanced expression parsing features (operator precedence, expression stack) are unreleased and subject to change.
+
+#### `ASTBuilder.buildNode (mode: string option) (matchedText: string) (context: ParserContext) : ASTNode option`
+Builds an AST node based on mode and matched text with expression parsing support.
+
+#### `ASTBuilder.pushOperand (operand: ASTNode) (stack: ExpressionStack) : ExpressionStack`
+Pushes an operand onto the expression stack for complex expression building.
+
+#### `ASTBuilder.pushOperator (op: string) (stack: ExpressionStack) : ExpressionStack`
+Pushes an operator onto the expression stack, processing lower precedence operators first.
+
+#### `ASTBuilder.finalizeExpression (stack: ExpressionStack) : ASTNode option`
+Finalizes expression parsing and builds proper AST trees with operator precedence.
+
+#### `ASTBuilder.getExpressionStack (context: ParserContext) : ExpressionStack`
+Gets or creates an expression stack for the current parsing context.
+
+#### `ASTBuilder.setExpressionStack (stack: ExpressionStack) (context: ParserContext) : ParserContext`
+Updates the expression stack in the parsing context.
+
+#### `ASTBuilder.finalizePendingExpression (context: ParserContext) : ParserContext`
+Finalizes any pending expression and adds it to the AST.
+
+#### `ASTBuilder.startExpression (context: ParserContext) : ParserContext`
+Starts a new expression context.
+
+#### `ASTBuilder.handleExpressionEnd (context: ParserContext) : ParserContext`
+Handles end-of-expression markers like semicolons by finalizing expressions.
+
+#### `ASTBuilder.buildAssignment (context: ParserContext) : ParserContext`
+Builds assignment statements from recent tokens.
+
+#### `ASTBuilder.buildFunctionCall (context: ParserContext) : ParserContext`
+Builds function calls from recent tokens.
 
 #### `ASTBuilder.pushNodeStack (node: ASTNode) (context: ParserContext) : ParserContext`
 Pushes a node onto the AST stack for nested structures.
@@ -599,7 +641,7 @@ Pushes a node onto the AST stack for nested structures.
 Pops a node from the AST stack.
 
 #### `ASTBuilder.autoAddNode (config: ParserConfig) (matchedText: string) (context: ParserContext) : ParserContext`
-Automatically creates and adds an AST node if AST building is enabled.
+Automatically creates and adds an AST node if AST building is enabled, with expression stack integration.
 
 #### `ASTBuilder.getNodeStack (context: ParserContext) : ASTNode list`
 Gets the current AST node stack.

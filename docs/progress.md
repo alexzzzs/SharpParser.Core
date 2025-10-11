@@ -1,9 +1,33 @@
 # SharpParser.Core Implementation Progress
 
 
-**Date**: October 6, 2024
-**Status**: Enhanced with additional real-world examples
-**Version**: 1.1.0
+**Date**: October 11, 2024
+**Status**: Advanced Expression Parsing Released
+**Version**: 1.2.0
+
+## Version 1.2.0 Changelog
+
+### New Features
+- **Enhanced AST Building System**: Complete rewrite of the AST builder with proper expression parsing
+  - Added expression stack system for handling operator precedence
+  - Implemented Shunting-yard algorithm for binary operations
+  - Added support for complex mathematical expressions with correct precedence (*, / > +, -)
+  - Added expression finalization at statement boundaries (semicolons)
+  - Added assignment statement building (`x = value`)
+  - Added function call construction with argument handling
+  - Improved tree construction for nested expressions
+
+### Improvements
+- **Advanced Expression Parsing**: Full support for mathematical expressions with proper operator precedence
+- **Enhanced AST Types**: Improved AST node construction for complex expressions
+- **Better Expression Handling**: Expression contexts tracked separately from statement contexts
+
+### Technical Details
+- Expression parsing now uses a proper stack-based algorithm instead of hardcoded rules
+- Operator precedence follows standard mathematical conventions
+- AST nodes are now properly nested for complex expressions
+- Backward compatibility maintained for existing custom AST builders
+- Comprehensive test coverage for all expression parsing features
 
 ## Version 1.1.0 Changelog
 
@@ -199,4 +223,3 @@ SharpParser.Core has been **successfully implemented** as a complete, beginner-f
 -  **Follows best practices**
 -  **Is ready for production use**
 
-The implementation demonstrates a clean, modular architecture that makes parsing both accessible to beginners and powerful for advanced users, exactly as envisioned in the original specification.

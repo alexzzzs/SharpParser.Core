@@ -1,6 +1,6 @@
 # SharpParser.Core
 
-[![NuGet](https://img.shields.io/nuget/v/SharpParser.Core.svg)](https://www.nuget.org/packages/SharpParser.Core/)
+[![NuGet](https://img.shields.io/nuget/v/SharpParser.Core.svg)](https://www.nuget.org/packages/SharpParser.Core/1.2.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![.NET](https://img.shields.io/badge/.NET-6.0+-blue.svg)](https://dotnet.microsoft.com/)
 [![F#](https://img.shields.io/badge/F%23-00539C?logo=fsharp&logoColor=white)](https://fsharp.org/)
@@ -17,12 +17,26 @@ Writing parsers in F# often requires complex combinator libraries or heavy compi
 - **Context-sensitive parsing modes** - Use mode stacks for nested parsing contexts
 - **Optional tokenization and AST construction** - Enable automatic token and AST generation
 - **Enhanced AST types** - Support for binary operations, unary operations, variables, numbers, and strings
+- **Advanced expression parsing** - Proper operator precedence and complex mathematical expressions
 - **Configuration validation** - Built-in validation to catch configuration errors early
 - **Error handling and debugging** - Comprehensive error reporting and trace logging
 - **Parallel parsing** - Multi-threaded parsing for improved performance on multi-core systems
 - **Functional programming** - Pure functions, immutable data structures, and no mutable state
 - **Fluent, chainable API** - Easy-to-use functional programming style
-- **Comprehensive testing** - 138 tests covering all functionality and edge cases
+- **Comprehensive testing** - 138+ tests covering all functionality and edge cases
+
+## What's New in v1.2.0
+
+ **Enhanced Expression Parsing** - Major upgrade to the AST building system with proper operator precedence and complex mathematical expression support:
+
+- **Shunting-yard algorithm** for correct binary operation precedence (*, / > +, -)
+- **Expression stack system** for handling nested expressions and parentheses
+- **Assignment statement building** (`x = value` syntax)
+- **Function call construction** with proper argument handling
+- **Expression finalization** at statement boundaries (semicolons)
+- **Improved AST node construction** for complex mathematical expressions
+
+This release makes SharpParser.Core even more powerful for parsing programming languages, mathematical expressions, and complex data formats!
 
 ## Quick Start
 
@@ -47,7 +61,7 @@ Parser.runString "hello world" parser
 Hello found at line 1, col 1
 ```
 
-✅ **That's all you need to start building a parser!** The next example shows how to handle nested contexts, ASTs, and more advanced features.
+ **That's all you need to start building a parser!** The next example shows how to handle nested contexts, ASTs, and more advanced features.
 
 ### Full Example with Modes & AST
 
@@ -108,7 +122,7 @@ dotnet add package SharpParser.Core
 Or add it manually to your `.fsproj`:
 
 ```xml
-<PackageReference Include="SharpParser.Core" Version="1.1.0" />
+<PackageReference Include="SharpParser.Core" Version="1.2.0" />
 ```
 
 ### From Source
@@ -318,9 +332,13 @@ dotnet test
 ✅ **Configuration validation** - Built-in validation for parser configurations
 ✅ **Parallel parsing** - Multi-threaded parsing for improved performance on multi-core systems
 ✅ **Performance optimizations** - Regex anchoring, trie Dictionary optimization, token caching
-✅ **Comprehensive testing** - 138 tests covering all functionality and edge cases
+✅ **Comprehensive testing** - 138+ tests covering all functionality and edge cases
 ✅ **Error handling** - Proper invocation of error handlers
-✅ **Documentation** - Updated API docs and README
+✅ **Documentation** - Updated API docs, README, and added changelog
+
+### Recent Releases
+
+✅ **Advanced Expression Parsing** - Enhanced AST building with proper operator precedence and complex mathematical expressions (released in v1.2.0)
 
 ### Future Roadmap
 

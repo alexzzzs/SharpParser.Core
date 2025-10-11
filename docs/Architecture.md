@@ -119,13 +119,17 @@ Automatic token emission based on handler matches:
 - Keyword registry for distinguishing keywords from identifiers
 
 ### 9. ASTBuilder Module (`ASTBuilder.fs`)
-**Responsibility**: AST construction
+**Responsibility**: AST construction with expression parsing
 **Dependencies**: Types, ParserContext
 
-Automatic AST node building based on parsing context:
-- `buildNode`: Creates AST nodes based on mode and matched text
-- Node stack management for nested structures
-- Context-aware node construction
+Advanced AST node building with proper expression parsing and operator precedence:
+- `ExpressionStack`: Stack-based system for handling operator precedence
+- `buildNode`: Creates AST nodes based on mode and matched text with expression context awareness
+- `pushOperand`/`pushOperator`: Expression stack management for complex mathematical expressions
+- `finalizeExpression`: Completes expression parsing and builds proper AST trees
+- `buildAssignment`/`buildFunctionCall`: Statement-level AST construction
+- Operator precedence handling (*, / > +, -) following mathematical conventions
+- Node stack management for nested structures and context-aware construction
 
 ### 10. ErrorHandler Module (`ErrorHandler.fs`)
 **Responsibility**: Error handling

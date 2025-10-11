@@ -52,22 +52,27 @@ module FullExample =
             |> Parser.onSequence "return" (fun ctx ->
                 printfn "Found return statement"
                 ctx)
-            // Character handlers for operators and punctuation
-            |> Parser.onChar '=' (fun ctx ->
-                printfn "Found assignment operator"
-                ctx)
-            |> Parser.onChar '+' (fun ctx ->
-                printfn "Found addition operator"
-                ctx)
-            |> Parser.onChar '-' (fun ctx ->
-                printfn "Found subtraction operator"
-                ctx)
-            |> Parser.onChar '*' (fun ctx ->
-                printfn "Found multiplication operator"
-                ctx)
-            |> Parser.onChar '/' (fun ctx ->
-                printfn "Found division operator"
-                ctx)
+            // Expression mode for proper operator precedence
+            |> Parser.inMode "expression" (fun config ->
+                config
+                |> Parser.onChar '=' (fun ctx ->
+                    printfn "Found assignment operator"
+                    ASTBuilder.buildAssignment ctx)
+                |> Parser.onChar '+' (fun ctx ->
+                    printfn "Found addition operator"
+                    ctx)
+                |> Parser.onChar '-' (fun ctx ->
+                    printfn "Found subtraction operator"
+                    ctx)
+                |> Parser.onChar '*' (fun ctx ->
+                    printfn "Found multiplication operator"
+                    ctx)
+                |> Parser.onChar '/' (fun ctx ->
+                    printfn "Found division operator"
+                    ctx)
+                |> Parser.onChar ';' (fun ctx ->
+                    printfn "Found semicolon - finalizing expression"
+                    ASTBuilder.handleExpressionEnd ctx))
             |> Parser.onChar '{' (fun ctx ->
                 printfn "Found opening brace - start of block"
                 ctx)
@@ -97,19 +102,21 @@ module FullExample =
                 printfn "Found comma (parameter separator)"
                 ctx)
 
-        // Define a complete program in our mini language
+        // Define a complete program in our mini language with complex expressions
         let input = """
 function calculate(x, y) {
-    result = x + y * 2
-    if result > 10 {
-        return result
+    result = x + y * 2;
+    temp = (x - y) / 3;
+    if result > 10 && temp < 5 {
+        return result * 2;
     } else {
-        return 0
+        return 0;
     }
 }
 
 function main() {
-    return calculate(5, 3)
+    value = calculate(5, 3);
+    return value + 10;
 }
 """
         printfn "Parsing a complete program with functions, conditionals, and function calls:"
