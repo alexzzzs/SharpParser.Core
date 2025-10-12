@@ -29,7 +29,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="FsUnit.xUnit" Version="4.0.4" />
+    <PackageReference Include="FsUnit.xUnit" Version="7.1.1" />
     <PackageReference Include="FsCheck.Xunit" Version="2.16.5" />
   </ItemGroup>
 
