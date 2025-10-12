@@ -1,6 +1,6 @@
 # SharpParser.Core
 
-[![CI](https://github.com/alexzzzs/SharpParser.Core/actions/workflows/ci.yml/badge.svg)](https://github.com/alexzzzs/SharpParser.Core/actions/workflows/ci.yml)
+[![CI](https://github.com/alexzzzs/SharpParser.Core/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/alexzzzs/SharpParser.Core/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/alexzzzs/SharpParser.Core/branch/main/graph/badge.svg)](https://codecov.io/gh/alexzzzs/SharpParser.Core)
 [![NuGet](https://img.shields.io/nuget/v/SharpParser.Core.svg)](https://www.nuget.org/packages/SharpParser.Core/1.2.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
