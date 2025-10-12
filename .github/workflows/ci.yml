@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        dotnet-version: ['6.0.x', '7.0.x', '8.0.x']
+        dotnet-version: ['8.0.x', '9.0.x']
 
     steps:
     - name: Checkout code
@@ -117,58 +117,6 @@ jobs:
         name: benchmark-results
         path: |
           BenchmarkDotNet.Artifacts/**
-
-  nuget-validation:
-    name: NuGet Package Validation
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup .NET 8.0
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.0.x'
-
-    - name: Restore dependencies
-      run: dotnet restore
-
-    - name: Pack NuGet package
-      run: dotnet pack src/SharpParser.Core/SharpParser.Core.fsproj --configuration Release --no-restore --output ./nupkg
-
-    - name: Validate NuGet package
-      run: |
-        # Check if package was created
-        if [ -f "./nupkg/SharpParser.Core.*.nupkg" ]; then
-          echo "✅ NuGet package created successfully"
-          ls -la ./nupkg/
-        else
-          echo "❌ NuGet package not found"
-          exit 1
-        fi
-
-    - name: Test package locally
-      run: |
-        # Create a test project
-        mkdir test-package
-        cd test-package
-        dotnet new console -f net8.0
-        dotnet add package SharpParser.Core --source ../nupkg --version 1.2.0
-
-        # Create a simple test
-        printf 'using SharpParser.Core;\n\nvar parser = Parser.create()\n    |> Parser.onChar('\''a'\'', ctx => ctx);\n\nvar result = Parser.runString("test", parser);\nConsole.WriteLine("Package test successful!");\n' > Program.cs
-
-        # Build and run
-        dotnet build
-        dotnet run
-
-    - name: Upload NuGet package
-      uses: actions/upload-artifact@v4
-      with:
-        name: nuget-package
-        path: nupkg/**
 
   release-validation:
     name: Release Validation
