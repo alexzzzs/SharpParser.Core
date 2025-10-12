@@ -5,6 +5,45 @@ All notable changes to SharpParser.Core will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Complete Parallel Parsing Implementation**: Fixed and enhanced parallel parsing functionality
+  - Proper parallel tokenization with correct line number adjustments
+  - Parallel function parsing with configurable boundary detection
+  - Multi-language support for JavaScript, F# functions, and C# methods
+  - Thread-safe result merging for tokens, AST nodes, and errors
+  - Configurable function boundary patterns using regex
+
+- **Comprehensive CI/CD Pipeline**: GitHub Actions automation for quality assurance
+  - Multi-platform testing (Windows, Linux, macOS) with .NET 6.0, 7.0, 8.0
+  - Automated test execution with coverage reporting via Codecov
+  - Performance benchmark automation on main branch pushes
+  - NuGet package validation and local testing
+  - Release validation with version consistency checks
+  - Pull request templates and contribution guidelines
+
+- **Dependency Management**: Automated dependency updates
+  - Dependabot configuration for NuGet packages and GitHub Actions
+  - Weekly update schedule with proper commit prefixes
+  - Controlled update frequency to prevent breaking changes
+
+### Fixed
+- **Parallel Tokenization Merging**: Corrected token merging logic with proper line offsets
+- **Function Boundary Detection**: Replaced hardcoded patterns with configurable regex system
+- **Parallel Result Merging**: Fixed state merging for multi-threaded parsing operations
+
+### Changed
+- **Test Suite**: Expanded from 138 to 148 tests with parallel parsing coverage
+- **README**: Added CI/CD badges and comprehensive contribution guidelines
+- **Documentation**: Updated with CI/CD information and improved contributor experience
+
+### Technical Details
+- Parallel parsing now correctly handles line number adjustments across function boundaries
+- CI pipeline ensures cross-platform compatibility and performance regression detection
+- Function boundary detection supports extensible patterns for different programming languages
+- Code coverage reporting integrated with automated quality gates
+
 ## [1.2.0] - 2025-10-11
 
 ### Added

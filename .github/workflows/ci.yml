@@ -1,0 +1,230 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        dotnet-version: ['6.0.x', '7.0.x', '8.0.x']
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET ${{ matrix.dotnet-version }}
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ matrix.dotnet-version }}
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build (Debug)
+      run: dotnet build --configuration Debug --no-restore
+
+    - name: Build (Release)
+      run: dotnet build --configuration Release --no-restore
+
+    - name: Run tests
+      run: dotnet test --configuration Debug --no-restore --verbosity normal --logger "trx;LogFileName=test-results.trx"
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: test-results-${{ matrix.os }}-${{ matrix.dotnet-version }}
+        path: "**/*.trx"
+
+  code-quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET 8.0
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Run tests with coverage
+      run: dotnet test --configuration Debug --no-restore --collect:"XPlat Code Coverage" --results-directory ./coverage --settings ./codecov.runsettings
+
+    - name: Upload coverage reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-reports
+        path: coverage/**
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage/**/coverage.cobertura.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+    - name: Check formatting (if dotnet-format available)
+      run: |
+        if dotnet tool list -g | grep -q dotnet-format; then
+          echo "Running dotnet format check..."
+          dotnet format --verify-no-changes --verbosity diagnostic
+        else
+          echo "dotnet-format not available, skipping format check"
+        fi
+      continue-on-error: true
+
+  benchmarks:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET 8.0
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build benchmarks
+      run: dotnet build benchmarks/SharpParser.Core.Benchmarks.fsproj --configuration Release --no-restore
+
+    - name: Run benchmarks
+      run: dotnet run --project benchmarks/SharpParser.Core.Benchmarks.fsproj --configuration Release -- --exporters json --exporters html
+
+    - name: Upload benchmark results
+      uses: actions/upload-artifact@v4
+      with:
+        name: benchmark-results
+        path: |
+          BenchmarkDotNet.Artifacts/**
+
+  nuget-validation:
+    name: NuGet Package Validation
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET 8.0
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Pack NuGet package
+      run: dotnet pack src/SharpParser.Core/SharpParser.Core.fsproj --configuration Release --no-restore --output ./nupkg
+
+    - name: Validate NuGet package
+      run: |
+        # Check if package was created
+        if [ -f "./nupkg/SharpParser.Core.*.nupkg" ]; then
+          echo "✅ NuGet package created successfully"
+          ls -la ./nupkg/
+        else
+          echo "❌ NuGet package not found"
+          exit 1
+        fi
+
+    - name: Test package locally
+      run: |
+        # Create a test project
+        mkdir test-package
+        cd test-package
+        dotnet new console -f net8.0
+        dotnet add package SharpParser.Core --source ../nupkg --version 1.2.0
+
+        # Create a simple test
+        cat > Program.cs << 'EOF'
+using SharpParser.Core;
+
+var parser = Parser.create()
+    |> Parser.onChar('a', ctx => ctx);
+
+var result = Parser.runString("test", parser);
+Console.WriteLine("Package test successful!");
+EOF
+
+        # Build and run
+        dotnet build
+        dotnet run
+
+    - name: Upload NuGet package
+      uses: actions/upload-artifact@v4
+      with:
+        name: nuget-package
+        path: nupkg/**
+
+  release-validation:
+    name: Release Validation
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, 'release') || contains(github.event.head_commit.message, 'Release')
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET 8.0
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Validate version consistency
+      run: |
+        # Check version in fsproj
+        PROJECT_VERSION=$(grep -oP '<Version>\K[^<]+' src/SharpParser.Core/SharpParser.Core.fsproj)
+        echo "Project version: $PROJECT_VERSION"
+
+        # Check version in changelog
+        if grep -q "## \[$PROJECT_VERSION\]" CHANGELOG.md; then
+          echo "✅ Version found in changelog"
+        else
+          echo "❌ Version not found in changelog"
+          exit 1
+        fi
+
+        # Check version in README badges
+        if grep -q "SharpParser.Core/$PROJECT_VERSION" README.md; then
+          echo "✅ Version found in README badges"
+        else
+          echo "❌ Version not found in README badges"
+          exit 1
+        fi
+
+    - name: Final release build
+      run: dotnet build --configuration Release
+
+    - name: Run all tests
+      run: dotnet test --configuration Release
+
+    - name: Create release package
+      run: dotnet pack src/SharpParser.Core/SharpParser.Core.fsproj --configuration Release --output ./release-artifacts
+
+    - name: Upload release artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-artifacts
+        path: release-artifacts/**

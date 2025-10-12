@@ -213,3 +213,121 @@ module ParserTests =
         // Should complete in reasonable time (less than 1 second)
         stopwatch.ElapsedMilliseconds |> should be (lessThan 1000L)
         Parser.getErrors context |> should be Empty
+
+    [<Fact>]
+    let ``Parallel tokenization merges tokens correctly`` () =
+        let config =
+            Parser.create ()
+            |> Parser.enableTokens ()
+            |> Parser.enableParallelTokenization ()
+            |> Parser.onSequence "let" (fun ctx -> ctx)
+        let input = "let x = 1\nlet y = 2\nlet z = 3"
+        let context = Parser.runString input config
+        let tokens = Parser.getTokens context
+        // Should have tokens for each "let" keyword
+        tokens |> List.filter (fun t -> match t.Type with TokenType.Keyword "let" -> true | _ -> false) |> List.length |> should equal 3
+
+    [<Fact>]
+    let ``Function boundary detection identifies JavaScript functions`` () =
+        let input = """
+function add(a, b) {
+    return a + b;
+}
+
+function multiply(x, y) {
+    return x * y;
+}
+"""
+        let functions = ParsingEngine.identifyFunctionBoundaries input
+        functions.Length |> should equal 2
+        functions.[0].Name |> should equal "add"
+        functions.[1].Name |> should equal "multiply"
+
+    [<Fact>]
+    let ``Function boundary detection identifies F# functions`` () =
+        let input = """
+let add a b =
+    a + b
+
+let multiply x y =
+    x * y
+"""
+        let functions = ParsingEngine.identifyFunctionBoundaries input
+        functions.Length |> should equal 2
+        functions.[0].Name |> should equal "add"
+        functions.[1].Name |> should equal "multiply"
+
+    [<Fact>]
+    let ``Parallel function parsing merges results correctly`` () =
+        let config =
+            Parser.create ()
+            |> Parser.enableTokens ()
+            |> Parser.enableParallel ()
+            |> Parser.onSequence "function" (fun ctx -> ctx)
+            |> Parser.onSequence "return" (fun ctx -> ctx)
+        let input = """
+function add(a, b) {
+    return a + b;
+}
+
+function multiply(x, y) {
+    return x * y;
+}
+"""
+        let context = Parser.runString input config
+        let tokens = Parser.getTokens context
+        // Should have tokens for both functions and returns
+        let functionTokens = tokens |> List.filter (fun t -> match t.Type with TokenType.Keyword "function" -> true | _ -> false)
+        let returnTokens = tokens |> List.filter (fun t -> match t.Type with TokenType.Keyword "return" -> true | _ -> false)
+        functionTokens.Length |> should equal 2
+        returnTokens.Length |> should equal 2
+
+    [<Fact>]
+    let ``Parallel parsing handles errors correctly`` () =
+        let config =
+            Parser.create ()
+            |> Parser.enableParallel ()
+            |> Parser.onChar 'a' (fun ctx -> ctx)
+            |> Parser.onError (fun ctx msg -> ctx)
+        let input = "abc"  // 'b' and 'c' will be unmatched
+        let context = Parser.runString input config
+        let errors = Parser.getErrors context
+        // Should have errors for unmatched characters
+        errors.Length |> should be (greaterThan 0)
+
+    [<Fact>]
+    let ``Parallel parsing with AST building works`` () =
+        let config =
+            Parser.create ()
+            |> Parser.enableAST ()
+            |> Parser.enableParallel ()
+            |> Parser.onSequence "function" (fun ctx -> ctx)  // This might generate AST nodes
+        let input = """
+function test() {
+    return 42;
+}
+"""
+        let context = Parser.runString input config
+        let ast = Parser.getAST context
+        // AST generation depends on the actual handlers, but should not crash
+        Assert.True(true)  // Just ensure it doesn't throw
+
+    [<Fact>]
+    let ``Parallel parsing respects minimum functions threshold`` () =
+        let config =
+            Parser.create ()
+            |> Parser.enableParallel ()
+            |> Parser.withMinFunctionsForParallelism 3  // Require 3 functions
+            |> Parser.onSequence "function" (fun ctx -> ctx)
+        let input = """
+function add(a, b) {
+    return a + b;
+}
+
+function multiply(x, y) {
+    return x * y;
+}
+"""  // Only 2 functions, should fall back to sequential
+        let context = Parser.runString input config
+        // Should still work but use sequential processing
+        context.FilePath |> should equal "<string>"

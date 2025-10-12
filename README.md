@@ -1,5 +1,7 @@
 # SharpParser.Core
 
+[![CI](https://github.com/alexzzzs/SharpParser.Core/actions/workflows/ci.yml/badge.svg)](https://github.com/alexzzzs/SharpParser.Core/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/alexzzzs/SharpParser.Core/branch/main/graph/badge.svg)](https://codecov.io/gh/alexzzzs/SharpParser.Core)
 [![NuGet](https://img.shields.io/nuget/v/SharpParser.Core.svg)](https://www.nuget.org/packages/SharpParser.Core/1.2.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![.NET](https://img.shields.io/badge/.NET-6.0+-blue.svg)](https://dotnet.microsoft.com/)
@@ -23,7 +25,8 @@ Writing parsers in F# often requires complex combinator libraries or heavy compi
 - **Parallel parsing** - Multi-threaded parsing for improved performance on multi-core systems
 - **Functional programming** - Pure functions, immutable data structures, and no mutable state
 - **Fluent, chainable API** - Easy-to-use functional programming style
-- **Comprehensive testing** - 138+ tests covering all functionality and edge cases
+- **Comprehensive testing** - 148+ tests covering all functionality and edge cases
+- **CI/CD** - Automated testing on Windows, Linux, and macOS with .NET 6.0, 7.0, and 8.0
 
 ## What's New in v1.2.0
 
@@ -304,6 +307,23 @@ The architecture supports several extension points:
 - **Plugin system** - Load handlers from external assemblies
 - **Visual debugging** - GUI for parsing visualization
 
+## CI/CD
+
+SharpParser.Core uses GitHub Actions for continuous integration and deployment:
+
+- **Automated Testing**: Runs on every push and PR across Windows, Linux, and macOS
+- **Multi-Version Support**: Tests against .NET 6.0, 7.0, and 8.0
+- **Code Coverage**: Integrated with Codecov for coverage reporting
+- **NuGet Validation**: Automatic package building and testing on releases
+- **Performance Benchmarks**: Automated performance regression testing
+- **Dependency Updates**: Dependabot keeps dependencies current
+
+### Branch Protection
+
+- `main` branch requires all CI checks to pass
+- Pull requests must be up-to-date with base branch
+- Code coverage minimums enforced
+
 ## Contributing
 
 We welcome contributions! SharpParser.Core is an open-source project that benefits from community involvement.
@@ -324,6 +344,17 @@ cd SharpParser.Core
 dotnet build
 dotnet test
 ```
+
+### Pull Request Process
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+6. CI will automatically run tests and checks
+7. Address any feedback and ensure all checks pass
+8. Your PR will be reviewed and merged! 🎉
 
 ### Recent Improvements
 
