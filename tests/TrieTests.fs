@@ -165,9 +165,8 @@ module TrieTests =
         Trie.search "Hello" trie |> should equal (Some "mixed")
 
     [<Property>]
-    let ``Trie insert and search roundtrip`` (key: string) (value: int) =
-        (not (isNull key)) ==> lazy (
-            let trie = Trie.empty<int> () |> Trie.insert key value
-            let result = Trie.search key trie
-            result = Some value
-        )
+    let ``Trie insert and search roundtrip`` (key: NonNull<string>) (value: int) =
+        let key = key.Get
+        let trie = Trie.empty<int> () |> Trie.insert key value
+        let result = Trie.search key trie
+        result = Some value

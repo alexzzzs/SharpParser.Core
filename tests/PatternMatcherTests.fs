@@ -176,20 +176,20 @@ module PatternMatcherTests =
         result |> should equal (Some (5, "HELLO"))
 
     [<Property>]
-    let ``PatternMatcher.tryMatch never exceeds string length`` (text: string) (pattern: string) (pos: int) =
-        (not (isNull text) && not (isNull pattern)) ==> lazy (
-            let safePos = max 0 (min pos text.Length)
-            try
-                let regex = PatternMatcher.compile pattern
-                let result = PatternMatcher.tryMatch regex text safePos
-                match result with
-                | Some (len, matched) ->
-                    safePos + len <= text.Length && matched.Length = len
-                | None -> true
-            with
-            | :? System.ArgumentException -> true // Invalid regex is acceptable
-            | _ -> false
-        )
+    let ``PatternMatcher.tryMatch never exceeds string length`` (text: NonNull<string>) (pattern: NonNull<string>) (pos: int) =
+        let text = text.Get
+        let pattern = pattern.Get
+        let safePos = max 0 (min pos text.Length)
+        try
+            let regex = PatternMatcher.compile pattern
+            let result = PatternMatcher.tryMatch regex text safePos
+            match result with
+            | Some (len, matched) ->
+                safePos + len <= text.Length && matched.Length = len
+            | None -> true
+        with
+        | :? System.ArgumentException -> true // Invalid regex is acceptable
+        | _ -> false
 
 
     [<Property>]
