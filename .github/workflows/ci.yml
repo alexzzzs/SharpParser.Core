@@ -158,15 +158,7 @@ jobs:
         dotnet add package SharpParser.Core --source ../nupkg --version 1.2.0
 
         # Create a simple test
-        cat > Program.cs << 'EOF'
-using SharpParser.Core;
-
-var parser = Parser.create()
-    |> Parser.onChar('a', ctx => ctx);
-
-var result = Parser.runString("test", parser);
-Console.WriteLine("Package test successful!");
-EOF
+        printf 'using SharpParser.Core;\n\nvar parser = Parser.create()\n    |> Parser.onChar('\''a'\'', ctx => ctx);\n\nvar result = Parser.runString("test", parser);\nConsole.WriteLine("Package test successful!");\n' > Program.cs
 
         # Build and run
         dotnet build
