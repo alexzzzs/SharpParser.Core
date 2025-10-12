@@ -30,7 +30,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="FsUnit.xUnit" Version="7.1.1" />
-    <PackageReference Include="FsCheck.Xunit" Version="2.16.5" />
+    <PackageReference Include="FsCheck.Xunit" Version="3.3.1" />
   </ItemGroup>
 
   <ItemGroup>
