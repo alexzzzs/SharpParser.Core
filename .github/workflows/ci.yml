@@ -106,7 +106,7 @@ jobs:
       run: dotnet restore
 
     - name: Build benchmarks
-      run: dotnet build benchmarks/SharpParser.Core.Benchmarks.fsproj --configuration Release --no-restore
+      run: dotnet build benchmarks/SharpParser.Core.Benchmarks.fsproj --configuration Release
 
     - name: Run benchmarks
       run: dotnet run --project benchmarks/SharpParser.Core.Benchmarks.fsproj --configuration Release -- --exporters json --exporters html
