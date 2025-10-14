@@ -2,9 +2,9 @@
 
 [![CI](https://github.com/alexzzzs/SharpParser.Core/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/alexzzzs/SharpParser.Core/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/alexzzzs/SharpParser.Core/branch/main/graph/badge.svg)](https://codecov.io/gh/alexzzzs/SharpParser.Core)
-[![NuGet](https://img.shields.io/nuget/v/SharpParser.Core.svg)](https://www.nuget.org/packages/SharpParser.Core/1.2.0)
+[![NuGet](https://img.shields.io/nuget/v/SharpParser.Core.svg)](https://www.nuget.org/packages/SharpParser.Core/1.3.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![.NET](https://img.shields.io/badge/.NET-6.0+-blue.svg)](https://dotnet.microsoft.com/)
+[![.NET](https://img.shields.io/badge/.NET-9.0+-blue.svg)](https://dotnet.microsoft.com/)
 [![F#](https://img.shields.io/badge/F%23-00539C?logo=fsharp&logoColor=white)](https://fsharp.org/)
 
 A beginner-friendly, event-driven F# parsing library for language design and implementation.
@@ -26,20 +26,21 @@ Writing parsers in F# often requires complex combinator libraries or heavy compi
 - **Functional programming** - Pure functions, immutable data structures, and no mutable state
 - **Fluent, chainable API** - Easy-to-use functional programming style
 - **Comprehensive testing** - 148+ tests covering all functionality and edge cases
-- **CI/CD** - Automated testing on Windows, Linux, and macOS with .NET 6.0, 7.0, and 8.0
+- **CI/CD** - Automated testing on Windows, Linux, and macOS with .NET 6.0, 7.0, 8.0, and 9.0
 
-## What's New in v1.2.0
+## What's New in v1.3.0
 
- **Enhanced Expression Parsing** - Major upgrade to the AST building system with proper operator precedence and complex mathematical expression support:
+  **Complete Parallel Parsing Implementation** - Major enhancement to parsing performance and functionality:
 
-- **Shunting-yard algorithm** for correct binary operation precedence (*, / > +, -)
-- **Expression stack system** for handling nested expressions and parentheses
-- **Assignment statement building** (`x = value` syntax)
-- **Function call construction** with proper argument handling
-- **Expression finalization** at statement boundaries (semicolons)
-- **Improved AST node construction** for complex mathematical expressions
+- **Multi-threaded parsing** for improved performance on multi-core systems
+- **Thread-safe result merging** for tokens, AST nodes, and errors
+- **Configurable function boundary detection** with regex patterns
+- **Multi-language support** for JavaScript, F#, and C# function parsing
+- **Enhanced CI/CD pipeline** with automated testing and package publishing
+- **Comprehensive input validation** for robust public API
+- **Automated NuGet publishing** with GitHub Actions integration
 
-This release makes SharpParser.Core even more powerful for parsing programming languages, mathematical expressions, and complex data formats!
+This release makes SharpParser.Core production-ready with enterprise-grade performance, reliability, and automated deployment capabilities!
 
 ## Quick Start
 
@@ -111,7 +112,7 @@ AST: [Function("test", [], [Return(Some(Number(42.0)))])]
 
 ### Prerequisites
 
-- [.NET 6.0 SDK](https://dotnet.microsoft.com/download/dotnet/6.0) or later
+- [.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/9.0) or later
 - F# development environment (Visual Studio, VS Code with Ionide, or Rider)
 
 ### NuGet Package (Recommended)
@@ -125,7 +126,7 @@ dotnet add package SharpParser.Core
 Or add it manually to your `.fsproj`:
 
 ```xml
-<PackageReference Include="SharpParser.Core" Version="1.2.0" />
+<PackageReference Include="SharpParser.Core" Version="1.3.0" />
 ```
 
 ### From Source
@@ -312,7 +313,7 @@ The architecture supports several extension points:
 SharpParser.Core uses GitHub Actions for continuous integration and deployment:
 
 - **Automated Testing**: Runs on every push and PR across Windows, Linux, and macOS
-- **Multi-Version Support**: Tests against .NET 6.0, 7.0, and 8.0
+- **Multi-Version Support**: Tests against .NET 6.0, 7.0, 8.0, and 9.0
 - **Code Coverage**: Integrated with Codecov for coverage reporting
 - **NuGet Validation**: Automatic package building and testing on releases
 - **Performance Benchmarks**: Automated performance regression testing
@@ -358,14 +359,15 @@ dotnet test
 
 ### Recent Improvements
 
-✅ **Functional programming** - Eliminated mutable state throughout the codebase
-✅ **Enhanced AST types** - Added support for complex expressions and literals
-✅ **Configuration validation** - Built-in validation for parser configurations
-✅ **Parallel parsing** - Multi-threaded parsing for improved performance on multi-core systems
-✅ **Performance optimizations** - Regex anchoring, trie Dictionary optimization, token caching
-✅ **Comprehensive testing** - 138+ tests covering all functionality and edge cases
-✅ **Error handling** - Proper invocation of error handlers
-✅ **Documentation** - Updated API docs, README, and added changelog
+✅ **Complete Parallel Parsing Implementation** - Fixed and enhanced parallel parsing functionality
+✅ **Enhanced Input Validation** - Added comprehensive validation for public API functions
+✅ **Parallel Processing Module** - Extracted parallel functionality for better code organization
+✅ **Comprehensive CI/CD Pipeline** - GitHub Actions automation with multi-platform testing
+✅ **Dependency Management** - Automated dependency updates with Dependabot
+✅ **ASTBuilder Refactoring** - Simplified expression stack logic with helper functions
+✅ **API Documentation** - Enhanced documentation for complex functions
+✅ **Test Suite Expansion** - Expanded from 138 to 148 tests with parallel parsing coverage
+✅ **.NET 9.0 Support** - Updated to support the latest .NET version
 
 ### Recent Releases
 

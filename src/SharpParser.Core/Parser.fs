@@ -11,15 +11,39 @@ module Parser =
         ParserConfig.withCharHandler character handler config
 
     /// Registers a sequence handler for the current mode context
+    /// <param name="sequence">The character sequence to match. Cannot be null or empty.</param>
+    /// <param name="handler">Handler function to invoke when sequence is matched.</param>
+    /// <param name="config">Parser configuration.</param>
+    /// <exception cref="System.ArgumentException">Thrown when sequence is null or empty.</exception>
     let onSequence (sequence: string) (handler: SequenceHandler) (config: ParserConfig) : ParserConfig =
+        if isNull sequence then
+            invalidArg "sequence" "Sequence cannot be null"
+        if System.String.IsNullOrEmpty(sequence) then
+            invalidArg "sequence" "Sequence cannot be empty"
         ParserConfig.withSequenceHandler sequence handler config
 
     /// Registers a pattern handler for the current mode context
+    /// <param name="pattern">Regular expression pattern to match. Cannot be null or empty.</param>
+    /// <param name="handler">Handler function to invoke when pattern is matched.</param>
+    /// <param name="config">Parser configuration.</param>
+    /// <exception cref="System.ArgumentException">Thrown when pattern is null or empty.</exception>
     let onPattern (pattern: string) (handler: PatternHandler) (config: ParserConfig) : ParserConfig =
+        if isNull pattern then
+            invalidArg "pattern" "Pattern cannot be null"
+        if System.String.IsNullOrEmpty(pattern) then
+            invalidArg "pattern" "Pattern cannot be empty"
         ParserConfig.withPatternHandler pattern handler config
 
     /// Sets mode context for nested handler registration
+    /// <param name="mode">Mode name for context. Cannot be null or empty.</param>
+    /// <param name="nestedConfig">Function that configures handlers for this mode.</param>
+    /// <param name="config">Parser configuration.</param>
+    /// <exception cref="System.ArgumentException">Thrown when mode is null or empty.</exception>
     let inMode (mode: string) (nestedConfig: ParserConfig -> ParserConfig) (config: ParserConfig) : ParserConfig =
+        if isNull mode then
+            invalidArg "mode" "Mode cannot be null"
+        if System.String.IsNullOrEmpty(mode) then
+            invalidArg "mode" "Mode cannot be empty"
         ParserConfig.withModeContext mode nestedConfig config
 
     /// Registers a global error handler
@@ -47,11 +71,21 @@ module Parser =
         ParserConfig.withParallelParsing true config
 
     /// Sets the maximum parallelism level
+    /// <param name="maxParallelism">Maximum number of parallel tasks. Must be greater than 0.</param>
+    /// <param name="config">Parser configuration.</param>
+    /// <exception cref="System.ArgumentException">Thrown when maxParallelism is less than or equal to 0.</exception>
     let withMaxParallelism (maxParallelism: int) (config: ParserConfig) : ParserConfig =
+        if maxParallelism <= 0 then
+            invalidArg "maxParallelism" "Maximum parallelism must be greater than 0"
         ParserConfig.withMaxParallelism maxParallelism config
 
     /// Sets the minimum functions threshold for enabling parallelism
+    /// <param name="minFunctions">Minimum number of functions to enable parallelism. Must be greater than or equal to 0.</param>
+    /// <param name="config">Parser configuration.</param>
+    /// <exception cref="System.ArgumentException">Thrown when minFunctions is less than 0.</exception>
     let withMinFunctionsForParallelism (minFunctions: int) (config: ParserConfig) : ParserConfig =
+        if minFunctions < 0 then
+            invalidArg "minFunctions" "Minimum functions for parallelism cannot be negative"
         ParserConfig.withMinFunctionsForParallelism minFunctions config
 
     /// Enables parallel tokenization
@@ -59,11 +93,25 @@ module Parser =
         ParserConfig.withParallelTokenization true config
 
     /// Parses a file and returns the final context
+    /// <param name="filePath">Path to the file to parse. Cannot be null or empty.</param>
+    /// <param name="config">Parser configuration.</param>
+    /// <returns>The final parsing context containing tokens, AST nodes, errors, and trace information.</returns>
+    /// <exception cref="System.ArgumentException">Thrown when filePath is null or empty.</exception>
     let run (filePath: string) (config: ParserConfig) : ParserContext =
+        if isNull filePath then
+            invalidArg "filePath" "File path cannot be null"
+        if System.String.IsNullOrWhiteSpace(filePath) then
+            invalidArg "filePath" "File path cannot be empty or whitespace"
         ParsingEngine.parseFile config filePath
 
     /// Parses a string and returns the final context
+    /// <param name="input">Input string to parse. Cannot be null.</param>
+    /// <param name="config">Parser configuration.</param>
+    /// <returns>The final parsing context containing tokens, AST nodes, errors, and trace information.</returns>
+    /// <exception cref="System.ArgumentException">Thrown when input is null.</exception>
     let runString (input: string) (config: ParserConfig) : ParserContext =
+        if isNull input then
+            invalidArg "input" "Input string cannot be null"
         ParsingEngine.parseString config input
 
     /// Extracts tokens from the final context
@@ -83,11 +131,22 @@ module Parser =
         (ParserContextOps.getState context).TraceLog |> List.rev // Reverse to maintain original order
 
     /// Gets user data from the parsing context
+    /// <param name="key">Key to retrieve data for. Cannot be null.</param>
+    /// <param name="context">Parser context.</param>
+    /// <exception cref="System.ArgumentException">Thrown when key is null.</exception>
     let getUserData (key: string) (context: ParserContext) : obj option =
+        if isNull key then
+            invalidArg "key" "Key cannot be null"
         ParserContextOps.getUserData key context
 
     /// Sets user data in the parsing context
+    /// <param name="key">Key to store data under. Cannot be null.</param>
+    /// <param name="value">Value to store.</param>
+    /// <param name="context">Parser context.</param>
+    /// <exception cref="System.ArgumentException">Thrown when key is null.</exception>
     let setUserData (key: string) (value: obj) (context: ParserContext) : ParserContext =
+        if isNull key then
+            invalidArg "key" "Key cannot be null"
         ParserContextOps.setUserData key value context
 
     /// Formats a summary of parsing results as a string

@@ -193,8 +193,8 @@ module ParserTests =
     [<Fact>]
     let ``Parser handles null input with exception`` () =
         let config = Parser.create ()
-        // Null input causes exception
-        Assert.Throws<System.NullReferenceException>(fun () -> Parser.runString null config |> ignore) |> ignore
+        // Null input causes ArgumentException due to validation
+        Assert.Throws<System.ArgumentException>(fun () -> Parser.runString null config |> ignore) |> ignore
 
     [<Fact>]
     let ``Parser handles empty handlers`` () =
@@ -238,7 +238,7 @@ function multiply(x, y) {
     return x * y;
 }
 """
-        let functions = ParsingEngine.identifyFunctionBoundaries input
+        let functions = ParallelProcessing.identifyFunctionBoundaries input
         functions.Length |> should equal 2
         functions.[0].Name |> should equal "add"
         functions.[1].Name |> should equal "multiply"
@@ -252,7 +252,7 @@ let add a b =
 let multiply x y =
     x * y
 """
-        let functions = ParsingEngine.identifyFunctionBoundaries input
+        let functions = ParallelProcessing.identifyFunctionBoundaries input
         functions.Length |> should equal 2
         functions.[0].Name |> should equal "add"
         functions.[1].Name |> should equal "multiply"

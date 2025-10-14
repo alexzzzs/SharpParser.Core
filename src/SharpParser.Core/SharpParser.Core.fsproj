@@ -1,13 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <WarnOn>3390;$(WarnOn)</WarnOn>
 
     <!-- NuGet Package Metadata -->
     <PackageId>SharpParser.Core</PackageId>
-    <Version>1.2.0</Version>
+    <Version>1.3.0</Version>
     <Authors>Alex</Authors>
     <Description>A beginner-friendly, event-driven F# parsing library for language design and implementation.</Description>
     <PackageTags>fsharp;parsing;parser;language;ast;tokenizer</PackageTags>
@@ -30,6 +30,7 @@
     <Compile Include="ParserConfig.fs" />
     <Compile Include="ASTBuilder.fs" />
     <Compile Include="ErrorHandler.fs" />
+    <Compile Include="ParallelProcessing.fs" />
     <Compile Include="ParsingEngine.fs" />
     <Compile Include="Tracer.fs" />
     <Compile Include="Parser.fs" />

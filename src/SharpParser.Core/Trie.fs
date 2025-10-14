@@ -22,7 +22,13 @@ module Trie =
             Value = None
         }
 
-    /// Inserts a sequence into the trie with an associated value
+    /// Inserts a sequence into the trie with an associated value.
+    /// Creates new nodes as needed for each character in the sequence.
+    /// If the sequence already exists, updates its associated value.
+    /// <param name="sequence">The character sequence to insert</param>
+    /// <param name="value">The value to associate with the sequence</param>
+    /// <param name="node">The root node of the trie</param>
+    /// <returns>Updated trie root node</returns>
     let rec insert (sequence: string) (value: 'T) (node: TrieNode<'T>) : TrieNode<'T> =
         match sequence with
         | "" ->
@@ -58,6 +64,11 @@ module Trie =
     /// Finds the longest matching sequence starting at the given position in text.
     /// Traverses the trie character by character, keeping track of the last successful terminal match.
     /// This implements the "longest match" semantics where longer sequences take precedence over shorter ones.
+    /// For example, if both "if" and "ifelse" are in the trie, "ifelse" will be preferred over "if".
+    /// <param name="text">The text to search for matches</param>
+    /// <param name="position">Starting position in the text (0-based)</param>
+    /// <param name="node">Root node of the trie to search</param>
+    /// <returns>Some(length, value) for the longest match, or None if no match found</returns>
     let longestMatch (text: string) (position: int) (node: TrieNode<'T>) : (int * 'T) option =
         // Recursive helper function that traverses the trie and text simultaneously
         let rec traverse currentPos currentNode lastMatch =

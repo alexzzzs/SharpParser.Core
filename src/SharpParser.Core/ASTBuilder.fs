@@ -3,11 +3,13 @@ namespace SharpParser.Core
 /// Module for automatic AST node construction based on parsing context
 module ASTBuilder =
 
-    /// Expression stack for building complex expressions with precedence
+    /// Expression stack for building complex expressions with operator precedence.
+    /// Uses the shunting-yard algorithm to handle mathematical expressions correctly.
+    /// For example, "2 + 3 * 4" becomes "(2 + (3 * 4))" in the AST.
     type ExpressionStack = {
-        /// Stack of operands (AST nodes)
+        /// Stack of operands (AST nodes representing values or subexpressions)
         Operands: ASTNode list
-        /// Stack of operators with precedence
+        /// Stack of operators with their precedence levels (higher = tighter binding)
         Operators: (string * int) list  // (operator, precedence)
     }
 
@@ -17,16 +19,18 @@ module ASTBuilder =
         Operators = []
     }
 
-    /// Operator precedence levels (higher number = higher precedence)
+    /// Gets the precedence level for operators in expressions.
+    /// Higher numbers indicate tighter binding (evaluated first).
+    /// Based on standard mathematical and programming language conventions.
     let operatorPrecedence = function
-        | "*" | "/" -> 7
-        | "+" | "-" -> 6
-        | "<" | ">" | "<=" | ">=" -> 5
-        | "==" | "!=" -> 4
-        | "&&" -> 3
-        | "||" -> 2
-        | "=" -> 1
-        | _ -> 0
+        | "*" | "/" -> 7  // Multiplication/division (highest precedence)
+        | "+" | "-" -> 6  // Addition/subtraction
+        | "<" | ">" | "<=" | ">=" -> 5  // Comparison operators
+        | "==" | "!=" -> 4  // Equality operators
+        | "&&" -> 3  // Logical AND
+        | "||" -> 2  // Logical OR
+        | "=" -> 1   // Assignment (lowest precedence)
+        | _ -> 0     // Unknown operators
 
     /// Applies a binary operation to the top two operands on the stack
     let applyBinaryOp (op: string) (stack: ExpressionStack) : ExpressionStack =
@@ -75,7 +79,28 @@ module ASTBuilder =
         let stackKey = "ExpressionStack"
         ParserContextOps.setUserData stackKey (box stack) context
 
-    /// Builds an AST node based on mode and matched text with improved logic
+    /// Helper function to add a node to the expression stack if in expression mode
+    let addToExpressionStack (node: ASTNode) (context: ParserContext) : ParserContext =
+        let currentMode = ParserContextOps.currentMode context
+        if currentMode = Some "expression" then
+            let stack = getExpressionStack context
+            let newStack = pushOperand node stack
+            setExpressionStack newStack context
+        else
+            context
+
+    /// Builds an AST node based on the current parsing mode and matched text.
+    /// This function implements context-aware AST construction with special handling for:
+    /// - Expression parsing with operator precedence
+    /// - Control flow statements (if, while, function declarations)
+    /// - Literals (numbers, strings, booleans)
+    /// - Identifiers and variables
+    ///
+    /// When in "expression" mode, operands are added to the expression stack for proper precedence handling.
+    /// <param name="mode">Current parsing mode (e.g., "expression", "functionBody")</param>
+    /// <param name="matchedText">The text that was matched by a handler</param>
+    /// <param name="context">Current parsing context</param>
+    /// <returns>Some AST node if one was created, None if no node should be created (e.g., for operators)</returns>
     let buildNode (mode: string option) (matchedText: string) (context: ParserContext) : ASTNode option =
         let modeStr = mode |> Option.defaultValue ""
 
@@ -105,18 +130,14 @@ module ASTBuilder =
         // Identifiers
         | "expression", text when System.Text.RegularExpressions.Regex.IsMatch(text, @"^[a-zA-Z_][a-zA-Z0-9_]*$") ->
             let identifierNode = ASTNode.Variable text
-            let stack = getExpressionStack context
-            let newStack = pushOperand identifierNode stack
-            let updatedContext = setExpressionStack newStack context
+            let updatedContext = addToExpressionStack identifierNode context
             Some identifierNode
 
         // Numbers
         | "expression", text when System.Double.TryParse text |> fst ->
             let number = System.Double.Parse text
             let numberNode = ASTNode.Number number
-            let stack = getExpressionStack context
-            let newStack = pushOperand numberNode stack
-            let updatedContext = setExpressionStack newStack context
+            let updatedContext = addToExpressionStack numberNode context
             Some numberNode
 
         // Strings
@@ -152,26 +173,14 @@ module ASTBuilder =
 
         match customNode with
         | Some node ->
-            // For expressions, also update the expression stack
             let contextWithNode = ParserContextOps.addASTNode node context
-            if currentMode = Some "expression" then
-                let stack = getExpressionStack context
-                let newStack = pushOperand node stack
-                setExpressionStack newStack contextWithNode
-            else
-                contextWithNode
+            addToExpressionStack node contextWithNode
         | None ->
             // Fall back to default node building
             match buildNode currentMode matchedText context with
             | Some node ->
                 let contextWithNode = ParserContextOps.addASTNode node context
-                // For expressions, also update the expression stack
-                if currentMode = Some "expression" then
-                    let stack = getExpressionStack context
-                    let newStack = pushOperand node stack
-                    setExpressionStack newStack contextWithNode
-                else
-                    contextWithNode
+                addToExpressionStack node contextWithNode
             | None -> context
 
     /// Pushes a node onto the AST node stack for nested structures

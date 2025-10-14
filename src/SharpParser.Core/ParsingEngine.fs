@@ -19,10 +19,17 @@ module ParsingEngine =
 
     /// Processes input starting at the given position and dispatches to appropriate handlers.
     /// This is the core parsing function that implements the parsing priority order:
-    /// 1. Sequence handlers (longest match wins)
-    /// 2. Pattern handlers (regex-based)
-    /// 3. Character handlers (single character)
-    /// Returns the updated context and the number of characters consumed
+    /// 1. Sequence handlers (longest match wins) - for keywords, operators like "function", "+", etc.
+    /// 2. Pattern handlers (regex-based) - for identifiers, numbers, strings, etc.
+    /// 3. Character handlers (single character) - for punctuation and individual characters
+    ///
+    /// The function tries each handler type in priority order and returns the updated parsing context
+    /// along with the number of characters consumed by the successful handler.
+    /// <param name="config">Parser configuration containing all registered handlers</param>
+    /// <param name="context">Current parsing context with position and state</param>
+    /// <param name="line">The line of text being parsed</param>
+    /// <param name="pos">Starting position within the line (0-based)</param>
+    /// <returns>Tuple of (updated context, characters consumed)</returns>
     let processPosition (config: ParserConfig) (context: ParserContext) (line: string) (pos: int) : ParserContext * int =
         // Determine the current parsing mode to look up appropriate handlers
         let currentMode = ParserContextOps.currentMode context
@@ -111,7 +118,12 @@ module ParsingEngine =
 
                         (finalContext, 1)
 
-    /// Processes an entire line of input
+    /// Processes an entire line of input by repeatedly calling processPosition for each character position.
+    /// Updates the parsing context with the line content and advances the line number for the next line.
+    /// <param name="config">Parser configuration</param>
+    /// <param name="context">Current parsing context</param>
+    /// <param name="line">The complete line of text to process</param>
+    /// <returns>Updated context after processing the entire line</returns>
     let processLine (config: ParserConfig) (context: ParserContext) (line: string) : ParserContext =
         // Update context buffer with line
         let context = ParserContextOps.updateBuffer line context
@@ -135,7 +147,12 @@ module ParsingEngine =
         else
             finalContext
 
-    /// Processes a sequence of input lines
+    /// Processes a sequence of input lines by folding over each line with processLine.
+    /// This maintains sequential processing order and proper line number tracking.
+    /// <param name="config">Parser configuration</param>
+    /// <param name="context">Initial parsing context</param>
+    /// <param name="lines">Sequence of lines to process</param>
+    /// <returns>Final context after processing all lines</returns>
     let processInput (config: ParserConfig) (context: ParserContext) (lines: string seq) : ParserContext =
         // Fold over lines with processLine, tracking line numbers
         lines |> Seq.fold (fun ctx line -> processLine config ctx line) context
@@ -145,247 +162,19 @@ module ParsingEngine =
     /// Processes lines in parallel when tokenization is enabled
     /// This is safe because tokenization doesn't depend on sequential state
     let processInputParallel (config: ParserConfig) (context: ParserContext) (lines: string seq) : ParserContext =
-        if ParserConfig.isParallelTokenizationEnabled config && ParserConfig.isTokenizationEnabled config then
-            // Parallel tokenization path
-            let linesArray = lines |> Seq.toArray
-            let maxParallelism = min config.ParallelConfig.MaxParallelism linesArray.Length
+        ParallelProcessing.processInputParallel config context lines
 
-            // Process lines in parallel, collecting tokenized results with line indices
-            let tokenizedResults =
-                linesArray
-                |> Array.Parallel.mapi (fun lineIndex line ->
-                    // Create a temporary context for this line's tokenization
-                    let lineContext = ParserContextOps.create "<parallel-line>" false
-                    let lineContext = ParserContextOps.updateBuffer line lineContext
-                    let lineContext = ParserContextOps.updatePosition (context.Line + lineIndex) 1 lineContext
-                    let processedContext = processLine config lineContext line
-                    (lineIndex, processedContext)
-                )
-
-            // Merge tokenized results back into main context
-            // This preserves the sequential nature while parallelizing tokenization
-            let finalContext =
-                tokenizedResults
-                |> Array.fold (fun ctx (lineIndex, lineResult) ->
-                    // Merge tokens from this line result with corrected line numbers
-                    let lineTokens = (ParserContextOps.getState lineResult).Tokens
-                    let correctedTokens = lineTokens |> List.map (fun token ->
-                        { token with Line = context.Line + lineIndex })
-                    let currentState = ParserContextOps.getState ctx
-                    let mergedState = { currentState with Tokens = currentState.Tokens @ correctedTokens }
-                    ParserContextOps.setState mergedState ctx
-                ) context
-
-            // Update final line count
-            ParserContextOps.updatePosition (context.Line + linesArray.Length) 1 finalContext
-        else
-            // Fall back to sequential processing
-            processInput config context lines
-
-    /// Configuration for function boundary detection patterns
-    type BoundaryPattern = {
-        /// Regex pattern to match function/class declarations
-        DeclarationPattern: string
-        /// Name capture group index in the regex (1-based)
-        NameGroupIndex: int
-        /// Type of declaration (function, class, method, etc.)
-        DeclarationType: string
-        /// Opening delimiter character
-        OpenDelimiter: char
-        /// Closing delimiter character
-        CloseDelimiter: char
-    }
-
-    /// Default boundary patterns for common languages
-    let defaultBoundaryPatterns = [
-        // JavaScript/TypeScript functions
-        {
-            DeclarationPattern = @"^\s*(?:export\s+)?(?:async\s+)?function\s+(\w+)"
-            NameGroupIndex = 1
-            DeclarationType = "function"
-            OpenDelimiter = '{'
-            CloseDelimiter = '}'
-        }
-        // JavaScript/TypeScript arrow functions (limited)
-        {
-            DeclarationPattern = @"^\s*(?:const|let|var)\s+(\w+)\s*=\s*(?:\([^)]*\)\s*)?=>\s*\{"
-            NameGroupIndex = 1
-            DeclarationType = "arrow-function"
-            OpenDelimiter = '{'
-            CloseDelimiter = '}'
-        }
-        // Class declarations
-        {
-            DeclarationPattern = @"^\s*(?:export\s+)?class\s+(\w+)"
-            NameGroupIndex = 1
-            DeclarationType = "class"
-            OpenDelimiter = '{'
-            CloseDelimiter = '}'
-        }
-        // C# methods
-        {
-            DeclarationPattern = @"^\s*(?:public|private|protected|internal)?\s*(?:static|virtual|override|abstract)?\s*\w+\s+(\w+)\s*\("
-            NameGroupIndex = 1
-            DeclarationType = "method"
-            OpenDelimiter = '{'
-            CloseDelimiter = '}'
-        }
-        // F# functions and members
-        {
-            DeclarationPattern = @"^\s*(?:let|member)\s+(?:rec\s+)?(\w+)"
-            NameGroupIndex = 1
-            DeclarationType = "function"
-            OpenDelimiter = '='
-            CloseDelimiter = '\n'  // F# uses indentation, but we'll use line-based for simplicity
-        }
-    ]
-
-    /// Identifies function/class boundaries in source code for parallel parsing
-    let identifyFunctionBoundaries (input: string) : FunctionBoundary list =
-        let lines = input.Split([|'\r'; '\n'|], System.StringSplitOptions.None)
-        let functions = ResizeArray<FunctionBoundary>()
-
-        let compiledPatterns = defaultBoundaryPatterns |> List.map (fun pattern ->
-            (System.Text.RegularExpressions.Regex(pattern.DeclarationPattern), pattern))
-
-        let mutable currentFunction: FunctionBoundary option = None
-        let mutable braceDepth = 0
-
-        for i in 0 .. lines.Length - 1 do
-            let line = lines.[i]
-            let trimmed = line.Trim()
-
-            // Check for function/class declarations using regex patterns
-            let declarationMatch = compiledPatterns |> List.tryPick (fun (regex, pattern) ->
-                let matchResult = regex.Match(line)
-                if matchResult.Success && matchResult.Groups.Count > pattern.NameGroupIndex then
-                    Some (matchResult.Groups.[pattern.NameGroupIndex].Value, pattern)
-                else None)
-
-            match declarationMatch with
-            | Some (name, pattern) ->
-                // If we were tracking a previous function, complete it
-                match currentFunction with
-                | Some func ->
-                    let contentLines = lines.[func.StartLine-1..i-1]
-                    functions.Add({ func with EndLine = i; Content = String.concat "\n" contentLines })
-                | None -> ()
-
-                // Start new function
-                currentFunction <- Some {
-                    Name = name
-                    StartLine = i + 1
-                    EndLine = i + 1
-                    Content = line
-                    DeclarationType = pattern.DeclarationType
-                }
-                braceDepth <- 0
-
-            | None ->
-                // Track delimiter depth for function boundaries
-                match currentFunction with
-                | Some func ->
-                    let pattern = compiledPatterns |> List.find (fun (_, p) -> p.DeclarationType = func.DeclarationType) |> snd
-                    let openDelims = line |> Seq.filter (fun c -> c = pattern.OpenDelimiter) |> Seq.length
-                    let closeDelims = line |> Seq.filter (fun c -> c = pattern.CloseDelimiter) |> Seq.length
-                    braceDepth <- braceDepth + openDelims - closeDelims
-
-                    if braceDepth <= 0 && pattern.CloseDelimiter <> '\n' then
-                        // Function ended
-                        let contentLines = lines.[func.StartLine-1..i]
-                        functions.Add({ func with EndLine = i + 1; Content = String.concat "\n" contentLines })
-                        currentFunction <- None
-                | None -> ()
-
-        // Handle any remaining function
-        match currentFunction with
-        | Some func ->
-            let contentLines = lines.[func.StartLine-1..]
-            functions.Add({ func with EndLine = lines.Length; Content = String.concat "\n" contentLines })
-        | None -> ()
-
-        functions |> Seq.toList
-
-    /// Merges parallel parsing results from multiple contexts
-    let mergeParallelResults (baseContext: ParserContext) (functionResults: (FunctionBoundary * ParserContext) array) : ParserContext =
-        let allTokens = ResizeArray<Token>()
-        let allASTNodes = ResizeArray<ASTNode>()
-        let allErrors = ResizeArray<ErrorInfo>()
-        let allTrace = ResizeArray<string>()
-
-        // Track line offset for each function
-        let mutable currentLineOffset = 0
-
-        for (func, funcContext) in functionResults do
-            let funcState = ParserContextOps.getState funcContext
-
-            // Adjust line numbers for tokens
-            let adjustedTokens = funcState.Tokens |> List.map (fun token ->
-                { token with Line = token.Line + currentLineOffset })
-            allTokens.AddRange(adjustedTokens)
-
-            // Adjust line numbers for errors
-            let adjustedErrors = funcState.Errors |> List.map (fun error ->
-                { error with Line = error.Line + currentLineOffset })
-            allErrors.AddRange(adjustedErrors)
-
-            // AST nodes and trace can be added as-is (they're function-scoped)
-            allASTNodes.AddRange(funcState.ASTNodes)
-            allTrace.AddRange(funcState.TraceLog)
-
-            // Update line offset for next function
-            currentLineOffset <- currentLineOffset + func.Content.Split([|'\r'; '\n'|], System.StringSplitOptions.None).Length
-
-        // Create merged state
-        let mergedState = {
-            Tokens = allTokens |> Seq.toList
-            ASTNodes = allASTNodes |> Seq.toList
-            Errors = allErrors |> Seq.toList
-            TraceLog = allTrace |> Seq.toList
-            UserData = (ParserContextOps.getState baseContext).UserData  // Keep base user data
-        }
-
-        // Update final context
-        let finalContext = ParserContextOps.setState mergedState baseContext
-        ParserContextOps.updatePosition (baseContext.Line + currentLineOffset) 1 finalContext
 
     /// Parses functions in parallel when there are enough independent functions
     let parseStringParallel (config: ParserConfig) (input: string) : ParserContext =
-        if not config.ParallelConfig.EnableParallelParsing then
-            // Call sequential version directly to avoid circular dependency
-            let initialContext = ParserContextOps.create "<string>" config.EnableTrace
-            let lines = input.Split([|'\r'; '\n'|], System.StringSplitOptions.None)
-            processInputParallel config initialContext lines
-        else
-            let functions = identifyFunctionBoundaries input
+        ParallelProcessing.parseStringParallel config input
 
-            if functions.Length < config.ParallelConfig.MinFunctionsForParallelism then
-                // Not enough functions for parallel benefit - use sequential
-                let initialContext = ParserContextOps.create "<string>" config.EnableTrace
-                let lines = input.Split([|'\r'; '\n'|], System.StringSplitOptions.None)
-                processInputParallel config initialContext lines
-            else
-                // Parse functions in parallel
-                let functionResults =
-                    functions
-                    |> Array.ofList
-                    |> Array.Parallel.map (fun func ->
-                        // Create isolated config for this function (disable parallel to avoid recursion)
-                        let isolatedConfig = { config with ParallelConfig = { config.ParallelConfig with EnableParallelParsing = false } }
-                        // Parse function content sequentially
-                        let funcContext = ParserContextOps.create "<function>" config.EnableTrace
-                        let funcLines = func.Content.Split([|'\r'; '\n'|], System.StringSplitOptions.None)
-                        let processedContext = processInputParallel isolatedConfig funcContext funcLines
-                        (func, processedContext)
-                    )
-
-                // Create base context for merging
-                let baseContext = ParserContextOps.create "<string>" config.EnableTrace
-
-                // Merge all parallel results
-                mergeParallelResults baseContext functionResults
-
-    /// Parses a file and returns the final context
+    /// Parses an entire file and returns the final parsing context.
+    /// Reads all lines from the file and processes them sequentially.
+    /// Handles file I/O errors by recording them in the parsing context.
+    /// <param name="config">Parser configuration with all handlers and settings</param>
+    /// <param name="filePath">Path to the file to parse</param>
+    /// <returns>Final parsing context containing all tokens, AST nodes, errors, and trace information</returns>
     let parseFile (config: ParserConfig) (filePath: string) : ParserContext =
         try
             // Create initial context with file path
@@ -411,7 +200,12 @@ module ParsingEngine =
             }
             ParserContextOps.addError errorInfo errorContext
 
-    /// Parses a string input and returns the final context
+    /// Parses a string input and returns the final parsing context.
+    /// Splits the input into lines and processes them, potentially using parallel processing
+    /// if enabled and beneficial for performance.
+    /// <param name="config">Parser configuration with all handlers and settings</param>
+    /// <param name="input">String content to parse</param>
+    /// <returns>Final parsing context containing all tokens, AST nodes, errors, and trace information</returns>
     let parseString (config: ParserConfig) (input: string) : ParserContext =
         // Create initial context for string input
         let initialContext = ParserContextOps.create "<string>" config.EnableTrace
