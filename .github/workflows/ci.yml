@@ -39,7 +39,7 @@ jobs:
       run: dotnet test --configuration Debug --no-restore --verbosity normal --logger "trx;LogFileName=test-results.trx"
 
     - name: Upload test results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       if: failure()
       with:
         name: test-results-${{ matrix.os }}-${{ matrix.dotnet-version }}
@@ -70,7 +70,7 @@ jobs:
       run: dotnet test --configuration Debug --no-restore --collect:"XPlat Code Coverage" --results-directory ./coverage --settings ./codecov.runsettings
 
     - name: Upload coverage reports
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: coverage-reports
         path: coverage/**
@@ -122,7 +122,7 @@ jobs:
       run: dotnet run --project benchmarks/SharpParser.Core.Benchmarks.fsproj --configuration Release -- --exporters json --exporters html
 
     - name: Upload benchmark results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: benchmark-results
         path: |
@@ -179,7 +179,7 @@ jobs:
       run: dotnet pack src/SharpParser.Core/SharpParser.Core.fsproj --configuration Release --output ./release-artifacts
 
     - name: Upload release artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: release-artifacts
         path: release-artifacts/**
@@ -206,7 +206,7 @@ jobs:
         run: dotnet pack src/SharpParser.Core/SharpParser.Core.fsproj --configuration Release --output ./nuget-package
 
       - name: Upload package artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: nuget-package
           path: ./nuget-package/*
